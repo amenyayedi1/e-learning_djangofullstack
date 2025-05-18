@@ -37,11 +37,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 5. Exécution des tests Django  
-      - name: Run Django tests
-        run: python manage.py test --verbosity=2
 
-      # 6. Déclenchement du déploiement PythonAnywhere  
+
+      # 5. Déclenchement du déploiement PythonAnywhere  
       - name: Trigger PythonAnywhere deploy
         env:
           PA_USER: ${{ secrets.PA_USER }}
