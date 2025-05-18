@@ -1,5 +1,10 @@
-name: CI/CD → PythonAnywhere
-on: [push]
+# fichier : .github/workflows/deploy-to-pythonanywhere.yml
+name: CI/CD Django → PythonAnywhere
+
+on:
+  push:
+    branches: [ main ]
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -8,44 +13,27 @@ jobs:
         working-directory: eduplus-dev
 
     steps:
+      # 1) Récupérer le code
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Installer deps système
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libcairo2-dev pkg-config python3-dev
-
-      - name: Setup Python
+      # 2) Installer Python et vos déps
+      - name: Setup Python & install requirements
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-
       - name: Install requirements
         run: |
           python -m pip install --upgrade pip
+          # forcer reportlab compatible xhtml2pdf
+          pip install reportlab==3.6.12
           pip install -r requirements.txt
 
-      - name: Déployer + migrations + static
-        env:
-          PA_USER: ${{ secrets.PA_USER }}
-          PA_SSH_KEY: ${{ secrets.PA_SSH_KEY }}
-        uses: webfactory/ssh-agent@v0.5.4
+      # 3) Déployer sur PythonAnywhere
+      - name: Deploy & migrate & collectstatic & reload
+        uses: umuttopalak/pythonanywhere-deploy-action@v1.1.2
         with:
-          ssh-private-key: ${{ env.PA_SSH_KEY }}
-
-      - name: SSH vers PythonAnywhere
-        run: |
-          ssh -o StrictHostKeyChecking=no $PA_USER@ssh.pythonanywhere.com << 'EOF'
-            cd ~/eduplus-dev
-            git pull origin main
-            source ~/.virtualenvs/eduplus-dev/bin/activate
-            python manage.py migrate --noinput
-            python manage.py collectstatic --noinput
-          EOF
-
-      - name: Reload via API
-        run: |
-          curl -X POST \
-            -H "Authorization: Token ${{ secrets.PA_TOKEN }}" \
-            "https://www.pythonanywhere.com/api/v0/user/${{ secrets.PA_USER }}/webapps/${{ secrets.PA_DOMAIN }}/reload/"
+          host:        'www.pythonanywhere.com'
+          username:    ${{ secrets.PA_USER }}
+          api_token:   ${{ secrets.PA_TOKEN }}
+          domain_name: ${{ secrets.PA_DOMAIN }}
