@@ -12,47 +12,48 @@ jobs:
         working-directory: eduplus-dev
 
     steps:
-      # 1. Checkout
       - name: Checkout
         uses: actions/checkout@v3
 
-      # 2. System deps
       - name: Install system deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libcairo2-dev pkg-config python3-dev
+        run: sudo apt-get update && sudo apt-get install -y libcairo2-dev pkg-config python3-dev
 
-      # 3. Setup Python
       - name: Setup Python
         uses: actions/setup-python@v4
-        with:
-          python-version: '3.10'
+        with: python-version: '3.10'
 
-      # 4. Install requirements
       - name: Install requirements
         run: |
           python -m pip install --upgrade pip
           pip install reportlab==3.6.12
           pip install -r requirements.txt
 
-      # 5. Lister vos webapps (vérifier PA_DOMAIN)
-      - name: List PythonAnywhere webapps
-        env:
-          PA_USER:  ${{ secrets.PA_USER }}
-          PA_TOKEN: ${{ secrets.PA_TOKEN }}
-        run: |
-          echo "→ Webapps disponibles :"
-          curl -s -H "Authorization: Token ${PA_TOKEN}" \
-            "https://www.pythonanywhere.com/api/v0/user/${PA_USER}/webapps/"
+      # → SSH vers PythonAnywhere
+      - name: Démarrer l’agent SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.PA_SSH_KEY }}
 
-      # 6. Recharger la webapp
+      - name: Déployer sur PythonAnywhere via SSH
+        env:
+          PA_USER:   ${{ secrets.PA_USER }}
+        run: |
+          ssh -o StrictHostKeyChecking=no $PA_USER@ssh.pythonanywhere.com << 'EOF'
+            cd ~/eduplus-dev
+            git pull origin main
+            source ~/.virtualenvs/eduplus-dev/bin/activate
+            python manage.py migrate --noinput
+            python manage.py collectstatic --noinput
+            exit
+          EOF
+
+      # → Reload WSGI
       - name: Reload PythonAnywhere webapp
         env:
           PA_USER:   ${{ secrets.PA_USER }}
           PA_TOKEN:  ${{ secrets.PA_TOKEN }}
-          PA_DOMAIN: amenyayedi.pythonanywhere.com
+          PA_DOMAIN: amenyayedi.pythonanywhere.com/
         run: |
-          echo "→ Reloading ${PA_DOMAIN}…"
-          curl -v -X POST \
+          curl -X POST \
             -H "Authorization: Token ${PA_TOKEN}" \
             "https://www.pythonanywhere.com/api/v0/user/${PA_USER}/webapps/${PA_DOMAIN}/reload/"
