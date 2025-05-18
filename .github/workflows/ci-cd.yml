@@ -2,8 +2,7 @@ name: CI/CD Django → PythonAnywhere
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   deploy:
@@ -13,39 +12,47 @@ jobs:
         working-directory: eduplus-dev
 
     steps:
-      # 1. Checkout du code
+      # 1. Checkout
       - name: Checkout
         uses: actions/checkout@v3
 
-      # 2. Installation des dépendances système
-      - name: Install system deps (Cairo, pkg-config…)
+      # 2. System deps
+      - name: Install system deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
-            libcairo2-dev \
-            pkg-config \
-            python3-dev
+          sudo apt-get install -y libcairo2-dev pkg-config python3-dev
 
-      # 3. Setup de Python
+      # 3. Setup Python
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
 
-      # 4. Installation des requirements avec ReportLab compatible
+      # 4. Install requirements
       - name: Install requirements
         run: |
           python -m pip install --upgrade pip
           pip install reportlab==3.6.12
           pip install -r requirements.txt
 
-      # 5. Reload de la webapp PythonAnywhere
+      # 5. Lister vos webapps (vérifier PA_DOMAIN)
+      - name: List PythonAnywhere webapps
+        env:
+          PA_USER:  ${{ secrets.PA_USER }}
+          PA_TOKEN: ${{ secrets.PA_TOKEN }}
+        run: |
+          echo "→ Webapps disponibles :"
+          curl -s -H "Authorization: Token ${PA_TOKEN}" \
+            "https://www.pythonanywhere.com/api/v0/user/${PA_USER}/webapps/"
+
+      # 6. Recharger la webapp
       - name: Reload PythonAnywhere webapp
         env:
           PA_USER:   ${{ secrets.PA_USER }}
           PA_TOKEN:  ${{ secrets.PA_TOKEN }}
-          PA_DOMAIN: amenyayedi.pythonanywhere.com
+          PA_DOMAIN: ${{ secrets.PA_DOMAIN }}  # ex. amenyayedi.pythonanywhere.com
         run: |
-          curl -X POST \
+          echo "→ Reloading ${PA_DOMAIN}…"
+          curl -v -X POST \
             -H "Authorization: Token ${PA_TOKEN}" \
             "https://www.pythonanywhere.com/api/v0/user/${PA_USER}/webapps/${PA_DOMAIN}/reload/"
