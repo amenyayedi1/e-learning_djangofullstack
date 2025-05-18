@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paiement | {{ course.title }} | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .checkout-header {
+        background-color: var(--primary-color);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    
+    .checkout-card {
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .order-summary {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+    }
+    
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+    
+    .summary-total {
+        font-weight: bold;
+        border-top: 1px solid #dee2e6;
+        padding-top: 0.75rem;
+        margin-top: 0.75rem;
+        font-size: 1.1rem;
+    }
+    
+    .secure-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        color: var(--success-color);
+        font-size: 0.9rem;
+    }
+    
+    /* Stripe Elements Custom Styles */
+    .stripe-element {
+        padding: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        background-color: white;
+        box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1);
+        transition: box-shadow 0.3s ease;
+    }
+    
+    .stripe-element.focus,
+    .stripe-element:focus {
+        box-shadow: 0 1px 3px 0 rgba(0,0,0,0.1), 0 0 0 2px rgba(49, 130, 206, 0.25);
+        outline: none;
+    }
+    
+    .stripe-element.invalid {
+        border-color: #e53e3e;
+    }
+    
+    #card-errors {
+        color: #e53e3e;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Payment Animation */
+    .payment-processing {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,0.9);
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 10px;
+        z-index: 10;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    
+    .payment-processing.active {
+        opacity: 1;
+        pointer-events: all;
+    }
+    
+    /* Payment Logo Styles */
+    .payment-logo {
+        height: 30px;
+        margin-right: 10px;
+        opacity: 0.6;
+        transition: opacity 0.3s ease;
+    }
+    
+    .payment-logo:hover {
+        opacity: 1;
+    }
+    
+    .course-image {
+        height: 100px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+
+    /* Amélioration de la présentation du paiement */
+    .payment-container {
+        position: relative;
+    }
+    
+    /* Styles des coupons */
+    .coupon-form {
+        margin-bottom: 1rem;
+    }
+    
+    .coupon-message {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .coupon-message.success {
+        color: var(--success-color);
+    }
+    
+    .coupon-message.error {
+        color: var(--danger-color);
+    }
+    
+    .coupon-applied {
+        padding: 8px;
+        background-color: rgba(72, 187, 120, 0.1);
+        border-radius: 5px;
+        border-left: 3px solid var(--success-color);
+        font-size: 0.9rem;
+        margin-top: 1rem;
+        display: none;
+    }
+    
+    .price-strikethrough {
+        text-decoration: line-through;
+        color: #999;
+        font-size: 0.9rem;
+    }
+    
+    .discount-text {
+        font-weight: bold;
+        color: var(--success-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête de paiement -->
+<section class="checkout-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="mb-2">Finaliser votre achat</h1>
+                <p class="mb-0">Effectuez votre paiement en toute sécurité</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Formulaire de paiement -->
+        <div class="col-lg-8 mb-4">
+            <div class="checkout-card card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations de paiement</h5>
+                </div>
+                <div class="card-body payment-container">
+                    <!-- Overlay de traitement de paiement -->
+                    <div class="payment-processing" id="payment-processing">
+                        <div class="text-center">
+                            <div class="spinner-border text-primary mb-3" role="status">
+                                <span class="visually-hidden">Traitement en cours...</span>
+                            </div>
+                            <p class="mb-0">Traitement de votre paiement en cours...</p>
+                        </div>
+                    </div>
+
+                    <div id="payment-form">
+                        <div class="mb-4">
+                            <div class="d-flex mb-3">
+                                <img src="{% static 'img/visa.png' %}" alt="Visa" class="payment-logo">
+                                <img src="{% static 'img/mastercard.png' %}" alt="Mastercard" class="payment-logo">
+                                <img src="{% static 'img/amex.png' %}" alt="American Express" class="payment-logo">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="card-holder" class="form-label">Titulaire de la carte</label>
+                                <input type="text" class="form-control" id="card-holder" placeholder="Nom sur la carte">
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="card-element" class="form-label">Informations de carte</label>
+                                <!-- Stripe Elements sera monté ici -->
+                                <div id="card-element" class="stripe-element"></div>
+                                <!-- Affichage des erreurs -->
+                                <div id="card-errors" role="alert"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="secure-badge">
+                            <i class="fas fa-lock"></i>
+                            <span>Transaction sécurisée avec cryptage SSL et conformité PCI DSS</span>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" id="submit-button" class="btn btn-primary btn-lg w-100">
+                                <i class="fas fa-credit-card me-2"></i> Payer {{ course.price }} €
+                            </button>
+                        </div>
+                        
+                        <p class="mt-3 text-muted small text-center">
+                            En cliquant sur le bouton, vous acceptez nos <a href="#">conditions d'utilisation</a> et confirmez avoir lu notre <a href="#">politique de confidentialité</a>.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Résumé de la commande -->
+        <div class="col-lg-4">
+            <div class="checkout-card card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Résumé de la commande</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        {% if course.image %}
+                            <img src="{{ course.image.url }}" class="course-image me-3" alt="{{ course.title }}">
+                        {% else %}
+                            <img src="{% static 'img/course-placeholder.jpg' %}" class="course-image me-3" alt="{{ course.title }}">
+                        {% endif %}
+                        <div>
+                            <h5 class="mb-1">{{ course.title }}</h5>
+                            <p class="mb-0 text-muted">{{ course.instructor.get_full_name }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="order-summary">
+                        <div class="summary-item">
+                            <span>Prix du cours</span>
+                            <span id="original-price">{{ course.original_price|default:course.price }} €</span>
+                        </div>
+                        
+                        {% if course.discount_price %}
+                            <div class="summary-item text-success">
+                                <span>Réduction ({{ course.discount_percentage }}%)</span>
+                                <span>-{{ course.discount_amount }} €</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div id="coupon-discount-row" class="summary-item text-success" style="display: none;">
+                            <span>Code promo (<span id="coupon-code-display"></span>)</span>
+                            <span id="coupon-discount-amount">-0 €</span>
+                        </div>
+                        
+                        <div class="summary-total">
+                            <span>Total</span>
+                            <span id="final-price">{{ course.price }} €</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 coupon-form">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Code promotionnel" id="coupon-code">
+                            <button class="btn btn-outline-secondary" type="button" id="apply-coupon">Appliquer</button>
+                        </div>
+                        <div id="coupon-message" class="coupon-message"></div>
+                        <div id="coupon-applied" class="coupon-applied">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    <span>Code promo appliqué</span>
+                                </div>
+                                <button id="remove-coupon" class="btn btn-sm btn-link text-muted p-0">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        <h6>Ce que vous obtenez :</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Accès à vie au cours</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> {{ course.modules.count }} modules</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Certificat d'achèvement</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i> Accès sur mobile et TV</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-3 d-flex justify-content-between">
+                        <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-link">
+                            <i class="fas fa-arrow-left me-1"></i> Retour au cours
+                        </a>
+                        <a href="{% url 'dashboard:home' %}" class="btn btn-link">
+                            Besoin d'aide? <i class="fas fa-question-circle ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialiser Stripe avec la clé publique
+        const stripe = Stripe('{{ stripe_public_key }}');
+        
+        // Créer une instance de Elements
+        const elements = stripe.elements({
+            locale: 'fr',
+            appearance: {
+                theme: 'stripe',
+                variables: {
+                    colorPrimary: '#4F46E5',
+                }
+            }
+        });
+        
+        // Créer l'élément Card et le monter au DOM
+        const cardElement = elements.create('card', {
+            hidePostalCode: true, // Ne pas demander le code postal
+            style: {
+                base: {
+                    fontSize: '16px',
+                    color: '#424770',
+                    '::placeholder': {
+                        color: '#aab7c4',
+                    },
+                },
+                invalid: {
+                    color: '#e53e3e',
+                    iconColor: '#e53e3e',
+                },
+            }
+        });
+        
+        // Monter l'élément Card au DOM
+        cardElement.mount('#card-element');
+        
+        // Gérer les changements du CardElement
+        cardElement.on('change', function(event) {
+            const displayError = document.getElementById('card-errors');
+            if (event.error) {
+                displayError.textContent = event.error.message;
+            } else {
+                displayError.textContent = '';
+            }
+        });
+        
+        // Gérer le formulaire de paiement
+        const form = document.getElementById('payment-form');
+        const submitButton = document.getElementById('submit-button');
+        const processingOverlay = document.getElementById('payment-processing');
+        
+        if (form && submitButton) {
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                // Désactiver le bouton et afficher l'overlay de traitement
+                submitButton.disabled = true;
+                processingOverlay.classList.add('active');
+                
+                // Créer une session de paiement
+                try {
+                    const response = await fetch('{% url "payments:create_checkout_session" course.id %}');
+                    const session = await response.json();
+                    
+                    if (session.error) {
+                        // Afficher l'erreur
+                        displayPaymentError(session.error);
+                        return;
+                    }
+                    
+                    // Rediriger vers le checkout Stripe
+                    const result = await stripe.redirectToCheckout({
+                        sessionId: session.id
+                    });
+                    
+                    if (result.error) {
+                        displayPaymentError(result.error.message);
+                    }
+                } catch (error) {
+                    displayPaymentError('Une erreur s\'est produite lors du traitement du paiement. Veuillez réessayer.');
+                    console.error('Error:', error);
+                }
+            });
+        }
+        
+        // Fonction pour afficher les erreurs
+        function displayPaymentError(errorMessage) {
+            const errorElement = document.getElementById('card-errors');
+            errorElement.textContent = errorMessage;
+            
+            // Réactiver le bouton et masquer l'overlay
+            submitButton.disabled = false;
+            processingOverlay.classList.remove('active');
+        }
+        
+        // Gérer l'application des coupons
+        const couponBtn = document.getElementById('apply-coupon');
+        const couponInput = document.getElementById('coupon-code');
+        const couponMessage = document.getElementById('coupon-message');
+        const couponApplied = document.getElementById('coupon-applied');
+        const couponDiscountRow = document.getElementById('coupon-discount-row');
+        const couponCodeDisplay = document.getElementById('coupon-code-display');
+        const couponDiscountAmount = document.getElementById('coupon-discount-amount');
+        const originalPrice = document.getElementById('original-price');
+        const finalPrice = document.getElementById('final-price');
+        const removeCoupon = document.getElementById('remove-coupon');
+        
+        if (couponBtn && couponInput) {
+            couponBtn.addEventListener('click', async function() {
+                const code = couponInput.value.trim();
+                if (!code) {
+                    displayCouponMessage('Veuillez entrer un code promotionnel.', false);
+                    return;
+                }
+                
+                // Désactiver le bouton pendant le traitement
+                couponBtn.disabled = true;
+                
+                try {
+                    // Créer un objet FormData pour envoyer les données
+                    const formData = new FormData();
+                    formData.append('code', code);
+                    
+                    // Envoyer la requête
+                    const response = await fetch('{% url "payments:apply_coupon" course.id %}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': getCsrfToken(),
+                        }
+                    });
+                    
+                    const result = await response.json();
+                    
+                    // Afficher le message
+                    displayCouponMessage(result.message, result.success);
+                    
+                    // Si le coupon est appliqué avec succès
+                    if (result.success) {
+                        // Mettre à jour l'affichage du prix
+                        updatePriceDisplay(result.original_price, result.new_price, result.discount_amount, code);
+                    }
+                } catch (error) {
+                    displayCouponMessage('Une erreur s\'est produite. Veuillez réessayer.', false);
+                    console.error('Error:', error);
+                } finally {
+                    // Réactiver le bouton
+                    couponBtn.disabled = false;
+                }
+            });
+        }
+        
+        // Supprimer le coupon appliqué
+        if (removeCoupon) {
+            removeCoupon.addEventListener('click', function() {
+                // Rétablir l'affichage du prix original
+                resetCouponDisplay();
+                
+                // Réinitialiser le champ de saisie du coupon
+                couponInput.value = '';
+                couponMessage.textContent = '';
+                couponMessage.className = 'coupon-message';
+                
+                // Suppression du coupon via une requête AJAX
+                fetch('{% url "payments:remove_coupon" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCsrfToken(),
+                        'Content-Type': 'application/json',
+                    }
+                }).catch(error => {
+                    console.error('Error removing coupon:', error);
+                });
+            });
+        }
+        
+        // Fonction pour afficher les messages du coupon
+        function displayCouponMessage(message, isSuccess) {
+            couponMessage.textContent = message;
+            couponMessage.className = 'coupon-message ' + (isSuccess ? 'success' : 'error');
+        }
+        
+        // Fonction pour mettre à jour l'affichage du prix
+        function updatePriceDisplay(originalPriceValue, newPriceValue, discountAmount, couponCode) {
+            // Mettre à jour l'affichage du prix original
+            originalPrice.innerHTML = `<span class="price-strikethrough">${originalPriceValue} €</span>`;
+            
+            // Mettre à jour l'affichage du prix final
+            finalPrice.textContent = `${newPriceValue} €`;
+            
+            // Mettre à jour le texte du bouton de paiement
+            submitButton.innerHTML = `<i class="fas fa-credit-card me-2"></i> Payer ${newPriceValue} €`;
+            
+            // Afficher la ligne de réduction du coupon
+            couponDiscountRow.style.display = 'flex';
+            couponCodeDisplay.textContent = couponCode;
+            couponDiscountAmount.textContent = `-${discountAmount} €`;
+            
+            // Afficher le badge du coupon appliqué
+            couponApplied.style.display = 'block';
+            
+            // Masquer le message
+            setTimeout(() => {
+                couponMessage.textContent = '';
+            }, 5000);
+        }
+        
+        // Fonction pour réinitialiser l'affichage après suppression du coupon
+        function resetCouponDisplay() {
+            // Rétablir l'affichage du prix original
+            originalPrice.textContent = `{{ course.original_price|default:course.price }} €`;
+            
+            // Rétablir l'affichage du prix final
+            finalPrice.textContent = `{{ course.price }} €`;
+            
+            // Rétablir le texte du bouton de paiement
+            submitButton.innerHTML = `<i class="fas fa-credit-card me-2"></i> Payer {{ course.price }} €`;
+            
+            // Masquer la ligne de réduction du coupon
+            couponDiscountRow.style.display = 'none';
+            
+            // Masquer le badge du coupon appliqué
+            couponApplied.style.display = 'none';
+        }
+        
+        // Fonction pour obtenir le jeton CSRF
+        function getCsrfToken() {
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+            return cookieValue || '';
+        }
+    });
+</script>
+{% endblock %} 

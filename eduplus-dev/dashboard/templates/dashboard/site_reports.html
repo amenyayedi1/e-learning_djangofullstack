@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load dashboard_extras %}
+
+{% block title %}Rapports du Site | EduPlus{% endblock %}
+
+{% block styles %}
+<style>
+  .stats-card {
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    transition: transform 0.3s;
+  }
+  
+  .stats-card:hover {
+    transform: translateY(-5px);
+  }
+  
+  .stats-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+  }
+  
+  .stats-icon i {
+    font-size: 24px;
+  }
+  
+  .stats-value {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .stats-label {
+    color: #6c757d;
+    font-size: 14px;
+  }
+  
+  .chart-container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  
+  .category-item {
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .progress {
+    height: 8px;
+    margin-top: 10px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h1 class="mb-4">Rapports et Statistiques du Site</h1>
+  
+  <div class="row mb-4">
+    <div class="col-md-3">
+      <div class="stats-card bg-primary bg-opacity-10">
+        <div class="stats-icon bg-primary bg-opacity-25">
+          <i class="bi bi-people-fill text-primary"></i>
+        </div>
+        <div class="stats-value">{{ monthly_new_users|intcomma }}</div>
+        <div class="stats-label">Nouveaux utilisateurs (30 jours)</div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="stats-card bg-success bg-opacity-10">
+        <div class="stats-icon bg-success bg-opacity-25">
+          <i class="bi bi-journal-check text-success"></i>
+        </div>
+        <div class="stats-value">{{ monthly_enrollments|intcomma }}</div>
+        <div class="stats-label">Nouvelles inscriptions (30 jours)</div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="stats-card bg-info bg-opacity-10">
+        <div class="stats-icon bg-info bg-opacity-25">
+          <i class="bi bi-collection-fill text-info"></i>
+        </div>
+        <div class="stats-value">{{ total_enrollments|intcomma }}</div>
+        <div class="stats-label">Total des inscriptions</div>
+      </div>
+    </div>
+    
+    <div class="col-md-3">
+      <div class="stats-card bg-warning bg-opacity-10">
+        <div class="stats-icon bg-warning bg-opacity-25">
+          <i class="bi bi-cash-stack text-warning"></i>
+        </div>
+        <div class="stats-value">{{ monthly_revenue|floatformat:2 }} €</div>
+        <div class="stats-label">Revenus (30 jours)</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-6">
+      <div class="chart-container">
+        <h3 class="h5 mb-4">Catégories populaires</h3>
+        
+        {% if popular_categories %}
+          {% for category in popular_categories %}
+            <div class="category-item">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 class="m-0">{{ category.name }}</h5>
+                  <small class="text-muted">{{ category.course_count }} cours, {{ category.enrollment_count }} inscriptions</small>
+                </div>
+                <span class="badge bg-primary">{{ category.enrollment_count }}</span>
+              </div>
+              <div class="progress">
+                <div class="progress-bar" role="progressbar" style="width: {{ category.enrollment_count|divisor:popular_categories.0.enrollment_count|multiply:100 }}%" 
+                     aria-valuenow="{{ category.enrollment_count }}" aria-valuemin="0" aria-valuemax="{{ popular_categories.0.enrollment_count }}"></div>
+              </div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="alert alert-info">
+            Aucune catégorie avec des inscriptions n'a été trouvée.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="chart-container">
+        <h3 class="h5 mb-4">Statistiques des inscriptions</h3>
+        <canvas id="enrollmentsChart" height="300"></canvas>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Boutons d'exportation des rapports -->
+  <div class="d-flex justify-content-end mt-4">
+    <button class="btn btn-outline-secondary me-2">
+      <i class="bi bi-file-earmark-pdf"></i> Exporter en PDF
+    </button>
+    <button class="btn btn-outline-secondary">
+      <i class="bi bi-file-earmark-excel"></i> Exporter en Excel
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Exemple de données pour le graphique des inscriptions
+    // Dans un cas réel, ces données viendraient du backend
+    const ctx = document.getElementById('enrollmentsChart').getContext('2d');
+    
+    // Supposons que nous avons des données pour les 6 derniers mois
+    const months = [
+      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin'
+    ];
+    
+    // Données fictives pour l'exemple
+    const enrollmentData = [25, 32, 45, 38, 52, {{ monthly_enrollments }}];
+    const revenueData = [1500, 2100, 3200, 2800, 3600, {{ monthly_revenue }}];
+    
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: months,
+        datasets: [
+          {
+            label: 'Inscriptions',
+            data: enrollmentData,
+            borderColor: 'rgba(54, 162, 235, 1)',
+            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3
+          },
+          {
+            label: 'Revenus (€)',
+            data: revenueData,
+            borderColor: 'rgba(255, 159, 64, 1)',
+            backgroundColor: 'rgba(255, 159, 64, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.3,
+            yAxisID: 'y-axis-2'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Nombre d\'inscriptions'
+            }
+          },
+          'y-axis-2': {
+            beginAtZero: true,
+            position: 'right',
+            title: {
+              display: true,
+              text: 'Revenus (€)'
+            },
+            grid: {
+              drawOnChartArea: false
+            }
+          }
+        }
+      }
+    });
+  });
+</script>
+{% endblock %} 

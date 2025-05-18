@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}EduPlus - Plateforme d'apprentissage en ligne{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="mb-4">Apprenez à votre rythme, où que vous soyez</h1>
+                <p class="lead mb-4">EduPlus vous offre un accès à des formations de qualité, créées par des experts, disponibles 24/7.</p>
+                <div class="d-flex">
+                    <a href="/courses/" class="btn btn-light btn-lg me-3">Explorer les cours</a>
+                    <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">S'inscrire</a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <img src="{% static 'img/hero-image.svg' %}" alt="Education illustration" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Pourquoi choisir EduPlus ?</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-4">
+                            <i class="fas fa-laptop-code fa-3x text-primary"></i>
+                        </div>
+                        <h4>Cours de qualité</h4>
+                        <p class="text-muted">Accédez à des cours conçus par des experts et régulièrement mis à jour.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-4">
+                            <i class="fas fa-clock fa-3x text-primary"></i>
+                        </div>
+                        <h4>Apprentissage flexible</h4>
+                        <p class="text-muted">Étudiez à votre rythme, quand vous le souhaitez, sur n'importe quel appareil.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-4">
+                            <i class="fas fa-certificate fa-3x text-primary"></i>
+                        </div>
+                        <h4>Certificats reconnus</h4>
+                        <p class="text-muted">Obtenez des certificats pour valoriser vos nouvelles compétences.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Courses Section (version temporaire) -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Nos cours populaires</h2>
+        <div class="row">
+            <!-- Cours 1 -->
+            <div class="col-md-4 mb-4">
+                <div class="card course-card h-100">
+                    <span class="badge bg-primary">Populaire</span>
+                    <img src="https://via.placeholder.com/300x200?text=Python" class="card-img-top" alt="Python">
+                    <div class="card-body">
+                        <h5 class="card-title">Introduction à Python</h5>
+                        <p class="card-text">Apprenez les bases de la programmation Python de zéro.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-primary fw-bold">49,99 €</span>
+                            <a href="#" class="btn btn-sm btn-outline-primary">En savoir plus</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Cours 2 -->
+            <div class="col-md-4 mb-4">
+                <div class="card course-card h-100">
+                    <span class="badge bg-success">Nouveau</span>
+                    <img src="https://via.placeholder.com/300x200?text=Web+Design" class="card-img-top" alt="Web Design">
+                    <div class="card-body">
+                        <h5 class="card-title">Web Design Responsive</h5>
+                        <p class="card-text">Créez des sites web modernes qui s'adaptent à tous les écrans.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-primary fw-bold">59,99 €</span>
+                            <a href="#" class="btn btn-sm btn-outline-primary">En savoir plus</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Cours 3 -->
+            <div class="col-md-4 mb-4">
+                <div class="card course-card h-100">
+                    <img src="https://via.placeholder.com/300x200?text=Marketing" class="card-img-top" alt="Marketing Digital">
+                    <div class="card-body">
+                        <h5 class="card-title">Marketing Digital</h5>
+                        <p class="card-text">Maîtrisez les stratégies de marketing en ligne pour développer votre activité.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-primary fw-bold">39,99 €</span>
+                            <a href="#" class="btn btn-sm btn-outline-primary">En savoir plus</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a href="/courses/" class="btn btn-primary">Voir tous les cours</a>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="mb-3">Prêt à commencer votre apprentissage ?</h2>
+                <p class="lead mb-4">Rejoignez des milliers d'étudiants qui apprennent déjà sur EduPlus.</p>
+                <a href="/accounts/signup/" class="btn btn-primary btn-lg">S'inscrire gratuitement</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

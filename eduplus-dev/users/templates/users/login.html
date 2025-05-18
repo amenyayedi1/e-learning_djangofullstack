@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Connexion | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-section {
+        min-height: calc(100vh - 200px);
+        padding: 5rem 0;
+        background-color: var(--light-color);
+    }
+    
+    .auth-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .auth-image {
+        background-image: url('{% static "img/login-bg.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        height: 100%;
+        min-height: 400px;
+    }
+    
+    .auth-content {
+        padding: 3rem;
+    }
+    
+    .auth-content h1 {
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--dark-color);
+    }
+    
+    .auth-content .form-label {
+        font-weight: 500;
+    }
+    
+    .auth-content .form-control {
+        padding: 0.75rem 1rem;
+        border-radius: 5px;
+    }
+    
+    .auth-content .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(var(--primary-rgb), 0.25);
+    }
+    
+    .btn-auth {
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border-radius: 5px;
+    }
+    
+    .social-login {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .social-btn:hover {
+        transform: translateY(-3px);
+    }
+    
+    .social-btn.google {
+        background-color: #DB4437;
+    }
+    
+    .social-btn.facebook {
+        background-color: #4267B2;
+    }
+    
+    .social-btn.twitter {
+        background-color: #1DA1F2;
+    }
+    
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 2rem 0;
+    }
+    
+    .divider hr {
+        flex-grow: 1;
+        border-color: #e9ecef;
+    }
+    
+    .divider span {
+        padding: 0 1rem;
+        color: var(--gray-color);
+    }
+    
+    .auth-footer {
+        margin-top: 2rem;
+        text-align: center;
+    }
+    
+    .auth-footer a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+    
+    .alert {
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card auth-card">
+                    <div class="row g-0">
+                        <div class="col-md-6 d-none d-md-block">
+                            <div class="auth-image"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="auth-content">
+                                <h1>Connexion</h1>
+                                <p class="text-muted">Bienvenue sur EduPlus. Connectez-vous pour accéder à vos cours.</p>
+                                
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                            {{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                {% if form.errors %}
+                                    <div class="alert alert-danger" role="alert">
+                                        <p class="mb-0">Email ou mot de passe incorrect. Veuillez réessayer.</p>
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Connexion avec réseaux sociaux -->
+                                <div class="social-login">
+                                    <a href="#" class="social-btn google">
+                                        <i class="fab fa-google"></i>
+                                    </a>
+                                    <a href="#" class="social-btn facebook">
+                                        <i class="fab fa-facebook-f"></i>
+                                    </a>
+                                    <a href="#" class="social-btn twitter">
+                                        <i class="fab fa-twitter"></i>
+                                    </a>
+                                </div>
+                                
+                                <div class="divider">
+                                    <hr>
+                                    <span>ou</span>
+                                    <hr>
+                                </div>
+                                
+                                <!-- Formulaire de connexion -->
+                                <form method="post" action="{% url 'users:login' %}">
+                                    {% csrf_token %}
+                                    
+                                    <div class="mb-3">
+                                        <label for="id_username" class="form-label">Email</label>
+                                        <input type="email" name="username" class="form-control" id="id_username" autofocus required>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="id_password" class="form-label">Mot de passe</label>
+                                        <input type="password" name="password" class="form-control" id="id_password" required>
+                                    </div>
+                                    
+                                    <div class="d-flex justify-content-between align-items-center mb-4">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="remember" id="remember">
+                                            <label class="form-check-label" for="remember">
+                                                Se souvenir de moi
+                                            </label>
+                                        </div>
+                                        <a href="{% url 'users:password_reset' %}" class="text-muted">Mot de passe oublié?</a>
+                                    </div>
+                                    
+                                    <input type="hidden" name="next" value="{{ next }}">
+                                    
+                                    <button type="submit" class="btn btn-primary btn-auth w-100">
+                                        <i class="fas fa-sign-in-alt me-2"></i> Se connecter
+                                    </button>
+                                </form>
+                                
+                                <div class="auth-footer">
+                                    <p>Pas encore de compte? <a href="{% url 'users:register' %}">S'inscrire</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

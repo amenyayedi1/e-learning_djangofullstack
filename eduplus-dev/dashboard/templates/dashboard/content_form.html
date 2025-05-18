@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+    {% if content %}Modifier "{{ content.title }}"{% else %}Ajouter du contenu{% endif %} | EduPlus
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        padding: 20px 0;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .sidebar {
+        position: sticky;
+        top: 20px;
+        height: calc(100vh - 40px);
+        padding-right: 15px;
+        overflow-y: auto;
+    }
+    .sidebar .list-group-item {
+        border-radius: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+    .sidebar .list-group-item.active {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    .type-selector {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    .type-card {
+        flex: 1 0 calc(33.333% - 1rem);
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+    .type-card:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .type-card.selected {
+        border-color: #007bff;
+        background-color: #f0f8ff;
+    }
+    .type-card-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: #6c757d;
+    }
+    .type-card.selected .type-card-icon {
+        color: #007bff;
+    }
+    .content-form {
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    .content-form:not(.active) {
+        max-height: 0;
+        opacity: 0;
+        margin: 0;
+        padding: 0;
+    }
+    .content-form.active {
+        max-height: 1000px;
+        opacity: 1;
+        margin-bottom: 1.5rem;
+    }
+    .preview-image {
+        max-width: 100%;
+        max-height: 200px;
+        margin-top: 10px;
+        border-radius: 0.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>{% if content %}Modifier "{{ content.title }}"{% else %}Ajouter du contenu au module{% endif %}</h2>
+            <div>
+                <a href="{% url 'dashboard:module_detail' module.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour au module
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row">
+        <!-- Barre latérale -->
+        <div class="col-md-3">
+            <div class="sidebar">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Informations</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Module:</strong> {{ module.title }}</p>
+                        <p><strong>Cours:</strong> {{ course.title }}</p>
+                        <p><strong>Contenus existants:</strong> {{ module.contents.count }}</p>
+                    </div>
+                </div>
+                
+                <div class="list-group">
+                    <div class="list-group-item active">
+                        <i class="bi bi-file-earmark-plus"></i> 
+                        {% if content %}Modifier le contenu{% else %}Ajouter du contenu{% endif %}
+                    </div>
+                    <a href="{% url 'dashboard:module_detail' module.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-list-ul"></i> Liste des contenus
+                    </a>
+                    <a href="{% url 'dashboard:modules_management' course.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-grid-3x3-gap"></i> Tous les modules
+                    </a>
+                    <a href="{% url 'dashboard:course_detail' course.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-book"></i> Détails du cours
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">{% if content %}Modifier{% else %}Ajouter{% endif %} du contenu</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" action="{% if content %}{% url 'dashboard:content_edit' content.id %}{% else %}{% url 'dashboard:content_create' module.id %}{% endif %}">
+                        {% csrf_token %}
+                        
+                        <!-- Titre du contenu -->
+                        <div class="mb-4">
+                            <label for="title" class="form-label">Titre <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" value="{% if content %}{{ content.title }}{% endif %}" required>
+                            <div class="form-text">Donnez un titre clair qui décrit le contenu.</div>
+                        </div>
+                        
+                        <!-- Sélecteur de type -->
+                        <div class="mb-4">
+                            <label class="form-label">Type de contenu <span class="text-danger">*</span></label>
+                            <div class="type-selector">
+                                <div class="type-card {% if content.content_type == 'text' or not content %}selected{% endif %}" data-type="text">
+                                    <div class="type-card-icon">
+                                        <i class="bi bi-file-text"></i>
+                                    </div>
+                                    <h5>Texte</h5>
+                                    <p class="mb-0 small text-muted">Contenu textuel formaté</p>
+                                </div>
+                                <div class="type-card {% if content.content_type == 'video' %}selected{% endif %}" data-type="video">
+                                    <div class="type-card-icon">
+                                        <i class="bi bi-camera-video"></i>
+                                    </div>
+                                    <h5>Vidéo</h5>
+                                    <p class="mb-0 small text-muted">Lien YouTube ou externe</p>
+                                </div>
+                                <div class="type-card {% if content.content_type == 'file' %}selected{% endif %}" data-type="file">
+                                    <div class="type-card-icon">
+                                        <i class="bi bi-file-earmark"></i>
+                                    </div>
+                                    <h5>Fichier</h5>
+                                    <p class="mb-0 small text-muted">PDF, documents, etc.</p>
+                                </div>
+                            </div>
+                            <input type="hidden" id="content_type" name="content_type" value="{% if content %}{{ content.content_type }}{% else %}text{% endif %}" required>
+                        </div>
+                        
+                        <!-- Formulaire pour le texte -->
+                        <div id="text-form" class="content-form {% if content.content_type == 'text' or not content %}active{% endif %}">
+                            <div class="mb-3">
+                                <label for="text" class="form-label">Contenu textuel <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="text" name="text" rows="10">{% if content.content_type == 'text' %}{{ content.text }}{% endif %}</textarea>
+                                <div class="form-text">Vous pouvez utiliser du texte formaté avec des sauts de ligne.</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Formulaire pour la vidéo -->
+                        <div id="video-form" class="content-form {% if content.content_type == 'video' %}active{% endif %}">
+                            <div class="mb-3">
+                                <label for="video_url" class="form-label">URL de la vidéo <span class="text-danger">*</span></label>
+                                <input type="url" class="form-control" id="video_url" name="video_url" value="{% if content.content_type == 'video' %}{{ content.video_url }}{% endif %}">
+                                <div class="form-text">Copiez-collez l'URL de la vidéo YouTube (ex: https://www.youtube.com/watch?v=ABCDEFG) ou une autre URL de vidéo.</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Formulaire pour le fichier -->
+                        <div id="file-form" class="content-form {% if content.content_type == 'file' %}active{% endif %}">
+                            <div class="mb-3">
+                                <label for="file" class="form-label">Fichier {% if not content or not content.file %}<span class="text-danger">*</span>{% endif %}</label>
+                                <input type="file" class="form-control" id="file" name="file" {% if not content or not content.file %}required{% endif %}>
+                                <div class="form-text">Formats supportés: PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, ZIP, etc.</div>
+                                {% if content.file %}
+                                <div class="mt-2">
+                                    <strong>Fichier actuel:</strong> 
+                                    <a href="{{ content.file.url }}" target="_blank">{{ content.file.name|filename }}</a>
+                                    <div class="form-text">Téléchargez un nouveau fichier pour remplacer celui-ci, ou laissez vide pour conserver le fichier actuel.</div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'dashboard:module_detail' module.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> {% if content %}Mettre à jour{% else %}Enregistrer{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Gestion du sélecteur de type de contenu
+        $('.type-card').click(function() {
+            // Mise à jour de l'apparence
+            $('.type-card').removeClass('selected');
+            $(this).addClass('selected');
+            
+            // Récupération du type sélectionné
+            var type = $(this).data('type');
+            $('#content_type').val(type);
+            
+            // Affichage du formulaire correspondant
+            $('.content-form').removeClass('active');
+            $('#' + type + '-form').addClass('active');
+            
+            // Gestion des champs requis
+            if (type === 'text') {
+                $('#text').prop('required', true);
+                $('#video_url').prop('required', false);
+                $('#file').prop('required', {% if not content or not content.file %}true{% else %}false{% endif %});
+            } else if (type === 'video') {
+                $('#text').prop('required', false);
+                $('#video_url').prop('required', true);
+                $('#file').prop('required', false);
+            } else if (type === 'file') {
+                $('#text').prop('required', false);
+                $('#video_url').prop('required', false);
+                $('#file').prop('required', {% if not content or not content.file %}true{% else %}false{% endif %});
+            }
+        });
+    });
+</script>
+{% endblock %} 

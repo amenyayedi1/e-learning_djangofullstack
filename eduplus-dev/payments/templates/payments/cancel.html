@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paiement annulé | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cancel-container {
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 3rem 0;
+    }
+    
+    .cancel-icon {
+        font-size: 5rem;
+        color: var(--danger-color);
+        margin-bottom: 2rem;
+    }
+    
+    .action-buttons {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .help-card {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        max-width: 600px;
+        width: 100%;
+        text-align: left;
+    }
+    
+    .help-title {
+        font-size: 1.2rem;
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .help-title i {
+        margin-right: 0.5rem;
+        color: var(--primary-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container cancel-container">
+    <div class="cancel-icon">
+        <i class="fas fa-times-circle"></i>
+    </div>
+    
+    <h1 class="mb-3">Paiement annulé</h1>
+    <p class="lead mb-4">Votre transaction n'a pas été finalisée et aucun montant n'a été débité.</p>
+    
+    <div class="help-card">
+        <div class="help-title">
+            <i class="fas fa-question-circle"></i>
+            <span>Pourquoi mon paiement a-t-il été annulé ?</span>
+        </div>
+        
+        <p>Les raisons peuvent inclure :</p>
+        <ul>
+            <li>Vous avez annulé le processus de paiement</li>
+            <li>Une erreur de connexion s'est produite</li>
+            <li>Un problème avec votre carte de paiement</li>
+            <li>Une intervention du système anti-fraude</li>
+        </ul>
+        
+        <div class="help-title mt-4">
+            <i class="fas fa-info-circle"></i>
+            <span>Que faire maintenant ?</span>
+        </div>
+        
+        <p>Vous pouvez :</p>
+        <ul>
+            <li>Essayer à nouveau avec une méthode de paiement différente</li>
+            <li>Vérifier les informations de votre carte</li>
+            <li>Contacter votre banque si le problème persiste</li>
+            <li>Contacter notre service client pour obtenir de l'aide</li>
+        </ul>
+    </div>
+    
+    <div class="action-buttons">
+        <a href="{% url 'payments:checkout' course.id %}" class="btn btn-primary">
+            <i class="fas fa-sync-alt me-1"></i> Réessayer
+        </a>
+        
+        <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Retour au cours
+        </a>
+        
+        <a href="#" class="btn btn-outline-primary">
+            <i class="fas fa-headset me-1"></i> Contacter le support
+        </a>
+    </div>
+</div>
+{% endblock %} 

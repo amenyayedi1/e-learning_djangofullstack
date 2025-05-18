@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gestion des Cours | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background-color: var(--primary-color);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    
+    .stat-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+        width: 60px;
+        height: 60px;
+        line-height: 60px;
+        text-align: center;
+        border-radius: 50%;
+    }
+    
+    .course-card {
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .course-card .card-img-top {
+        height: 180px;
+        object-fit: cover;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .sidebar-nav {
+        position: sticky;
+        top: 90px;
+    }
+    
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: var(--dark-color);
+        text-decoration: none;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar-link:hover, .sidebar-link.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .sidebar-link i {
+        margin-right: 0.75rem;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .search-bar {
+        position: relative;
+    }
+    
+    .search-bar .form-control {
+        padding-left: 2.5rem;
+        border-radius: 30px;
+    }
+    
+    .search-bar .search-icon {
+        position: absolute;
+        top: 50%;
+        left: 1rem;
+        transform: translateY(-50%);
+        color: var(--gray-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête -->
+<section class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="mb-2">Gestion des Cours</h1>
+                <p class="lead mb-0">Gérez tous les cours de votre plateforme</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'admin:index' %}" class="btn btn-light me-2">
+                    <i class="fas fa-cog me-1"></i> Admin Django
+                </a>
+                <a href="{% url 'dashboard:course_create' %}" class="btn btn-light">
+                    <i class="fas fa-plus me-1"></i> Ajouter un cours
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Sidebar de navigation -->
+        <div class="col-lg-3 mb-4">
+            <div class="sidebar-nav">
+                <a href="{% url 'dashboard:admin' %}" class="sidebar-link">
+                    <i class="fas fa-home"></i> Tableau de bord
+                </a>
+                <a href="{% url 'dashboard:users' %}" class="sidebar-link">
+                    <i class="fas fa-users"></i> Utilisateurs
+                </a>
+                <a href="{% url 'dashboard:courses_management' %}" class="sidebar-link active">
+                    <i class="fas fa-chalkboard"></i> Cours
+                </a>
+                <a href="{% url 'dashboard:instructors' %}" class="sidebar-link">
+                    <i class="fas fa-chalkboard-teacher"></i> Instructeurs
+                </a>
+                <a href="{% url 'dashboard:students' %}" class="sidebar-link">
+                    <i class="fas fa-user-graduate"></i> Étudiants
+                </a>
+                <a href="{% url 'dashboard:transactions' %}" class="sidebar-link">
+                    <i class="fas fa-money-bill-wave"></i> Transactions
+                </a>
+                <a href="{% url 'dashboard:reports_management' %}" class="sidebar-link">
+                    <i class="fas fa-chart-line"></i> Rapports
+                </a>
+                <a href="{% url 'dashboard:settings' %}" class="sidebar-link">
+                    <i class="fas fa-cog"></i> Paramètres
+                </a>
+                <a href="{% url 'dashboard:reports' %}" class="sidebar-link">
+                    <i class="fas fa-file-alt"></i> Rapports du site
+                </a>
+                <a href="{% url 'dashboard:notifications' %}" class="sidebar-link">
+                    <i class="fas fa-bell"></i> Notifications
+                </a>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-lg-9">
+            <!-- Statistiques -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-primary-subtle text-primary me-3">
+                                <i class="fas fa-book"></i>
+                            </div>
+                            <h4 class="h5 mb-0">Total</h4>
+                        </div>
+                        <h2 class="mb-0">{{ total_courses }}</h2>
+                        <p class="text-muted mb-0">Cours</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-success-subtle text-success me-3">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h4 class="h5 mb-0">Actifs</h4>
+                        </div>
+                        <h2 class="mb-0">{{ active_courses }}</h2>
+                        <p class="text-muted mb-0">Cours publiés</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-warning-subtle text-warning me-3">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <h4 class="h5 mb-0">En attente</h4>
+                        </div>
+                        <h2 class="mb-0">{{ pending_courses }}</h2>
+                        <p class="text-muted mb-0">Cours non publiés</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recherche et filtres -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="search-bar">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="form-control" id="searchCourses" placeholder="Rechercher des cours...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filterStatus">
+                                <option value="">Tous les statuts</option>
+                                <option value="published">Publiés</option>
+                                <option value="unpublished">Non publiés</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filterCategory">
+                                <option value="">Toutes les catégories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Liste des cours -->
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Liste des cours</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-file-export me-1"></i> Exporter
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{% url 'dashboard:courses_management' %}?export=csv">CSV</a></li>
+                            <li><a class="dropdown-item" href="{% url 'dashboard:courses_management' %}?export=excel">Excel</a></li>
+                            <li><a class="dropdown-item" href="{% url 'dashboard:courses_management' %}?export=pdf">PDF</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Cours</th>
+                                <th scope="col">Instructeur</th>
+                                <th scope="col">Catégorie</th>
+                                <th scope="col">Prix</th>
+                                <th scope="col">Étudiants</th>
+                                <th scope="col">Statut</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for course in courses %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if course.image %}
+                                            <img src="{{ course.image.url }}" alt="{{ course.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                        {% else %}
+                                            <img src="{% static 'img/default-course.png' %}" alt="{{ course.title }}" class="me-2" style="width: 40px; height: 40px; object-fit: cover;">
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="mb-0">{{ course.title }}</h6>
+                                            <small class="text-muted">{{ course.created_at|date:"d/m/Y" }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if course.instructor.profile.profile_picture %}
+                                            <img src="{{ course.instructor.profile.profile_picture.url }}" alt="{{ course.instructor.username }}" class="user-avatar me-2">
+                                        {% else %}
+                                            <img src="{% static 'img/default-user.png' %}" alt="{{ course.instructor.username }}" class="user-avatar me-2">
+                                        {% endif %}
+                                        <span>{{ course.instructor.get_full_name|default:course.instructor.username }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ course.category.name }}</td>
+                                <td>{{ course.price }} €</td>
+                                <td>{{ course.enrolled_students.count }}</td>
+                                <td>
+                                    {% if course.is_published %}
+                                        <span class="badge bg-success">Publié</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Non publié</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'dashboard:course_detail' course.id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'dashboard:course_edit' course.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="{% url 'dashboard:course_delete' course.id %}" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="7" class="text-center py-3">Aucun cours trouvé</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Précédent</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Suivant</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- Cours récents -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Cours récemment ajoutés</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for course in recent_courses %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            <div class="card course-card h-100">
+                                {% if course.image %}
+                                    <img src="{{ course.image.url }}" class="card-img-top" alt="{{ course.title }}">
+                                {% else %}
+                                    <img src="{% static 'img/default-course.png' %}" class="card-img-top" alt="{{ course.title }}">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ course.title }}</h5>
+                                    <p class="card-text small">{{ course.short_description|truncatechars:80 }}</p>
+                                    <div class="d-flex justify-content-between align-items-center mt-3">
+                                        <span class="fw-bold">{{ course.price }} €</span>
+                                        <span class="text-muted small">{{ course.created_at|date:"d/m/Y" }}</span>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-white d-flex justify-content-between">
+                                    <small class="text-muted">{{ course.category.name }}</small>
+                                    {% if course.is_published %}
+                                        <span class="badge bg-success">Publié</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Non publié</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center py-4">
+                            <p class="text-muted mb-0">Aucun cours récent à afficher</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Fonctionnalité de recherche
+        const searchInput = document.getElementById('searchCourses');
+        const courseRows = document.querySelectorAll('tbody tr');
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            courseRows.forEach(row => {
+                const title = row.querySelector('h6').textContent.toLowerCase();
+                const instructor = row.querySelector('td:nth-child(2) span').textContent.toLowerCase();
+                const category = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                
+                if (title.includes(searchTerm) || instructor.includes(searchTerm) || category.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // Filtrage par statut
+        const filterStatus = document.getElementById('filterStatus');
+        if (filterStatus) {
+            filterStatus.addEventListener('change', function() {
+                const selectedStatus = this.value;
+                
+                if (!selectedStatus) {
+                    courseRows.forEach(row => row.style.display = '');
+                    return;
+                }
+                
+                courseRows.forEach(row => {
+                    const statusBadge = row.querySelector('td:nth-child(6) .badge');
+                    const isPublished = statusBadge.classList.contains('bg-success');
+                    
+                    if ((selectedStatus === 'published' && isPublished) || 
+                        (selectedStatus === 'unpublished' && !isPublished)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        // Filtrage par catégorie
+        const filterCategory = document.getElementById('filterCategory');
+        if (filterCategory) {
+            filterCategory.addEventListener('change', function() {
+                const selectedCategory = this.value;
+                
+                if (!selectedCategory) {
+                    courseRows.forEach(row => row.style.display = '');
+                    return;
+                }
+                
+                courseRows.forEach(row => {
+                    const categoryName = row.querySelector('td:nth-child(3)').textContent;
+                    const categoryOption = Array.from(filterCategory.options).find(option => option.textContent === categoryName);
+                    
+                    if (categoryOption && categoryOption.value === selectedCategory) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+</script>
+{% endblock %} 

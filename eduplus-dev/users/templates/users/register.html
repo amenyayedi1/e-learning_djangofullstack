@@ -1,0 +1,382 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inscription | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .auth-section {
+        min-height: calc(100vh - 200px);
+        padding: 5rem 0;
+        background-color: var(--light-color);
+    }
+    
+    .auth-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+    
+    .auth-image {
+        background-image: url('{% static "img/register-bg.jpg" %}');
+        background-size: cover;
+        background-position: center;
+        height: 100%;
+        min-height: 400px;
+    }
+    
+    .auth-content {
+        padding: 2.5rem;
+    }
+    
+    .auth-content h1 {
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        color: var(--dark-color);
+    }
+    
+    .auth-content .form-label {
+        font-weight: 500;
+    }
+    
+    .auth-content .form-control {
+        padding: 0.75rem 1rem;
+        border-radius: 5px;
+    }
+    
+    .auth-content .form-control:focus {
+        box-shadow: 0 0 0 0.25rem rgba(var(--primary-rgb), 0.25);
+    }
+    
+    .btn-auth {
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        border-radius: 5px;
+    }
+    
+    .social-login {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        color: white;
+        transition: all 0.3s ease;
+    }
+    
+    .social-btn:hover {
+        transform: translateY(-3px);
+    }
+    
+    .social-btn.google {
+        background-color: #DB4437;
+    }
+    
+    .social-btn.facebook {
+        background-color: #4267B2;
+    }
+    
+    .social-btn.twitter {
+        background-color: #1DA1F2;
+    }
+    
+    .divider {
+        display: flex;
+        align-items: center;
+        margin: 1.5rem 0;
+    }
+    
+    .divider hr {
+        flex-grow: 1;
+        border-color: #e9ecef;
+    }
+    
+    .divider span {
+        padding: 0 1rem;
+        color: var(--gray-color);
+    }
+    
+    .auth-footer {
+        margin-top: 1.5rem;
+        text-align: center;
+    }
+    
+    .auth-footer a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+    
+    .alert {
+        border-radius: 5px;
+    }
+    
+    .user-type-selector {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 1.5rem;
+    }
+    
+    .user-type-selector .form-check {
+        flex: 1;
+        padding: 1rem;
+        border: 1px solid #e9ecef;
+        border-radius: 5px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .user-type-selector .form-check:hover {
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .user-type-selector .form-check-input {
+        margin-right: 5px;
+    }
+    
+    .user-type-selector .user-type-icon {
+        font-size: 1.5rem;
+        margin-bottom: 5px;
+    }
+    
+    .user-type-selector .form-check-input:checked ~ .form-check-label,
+    .user-type-selector .form-check-input:checked ~ .user-type-icon {
+        color: var(--primary-color);
+    }
+    
+    .user-type-selector .form-check-input:checked + .form-check {
+        border-color: var(--primary-color);
+        background-color: rgba(var(--primary-rgb), 0.05);
+    }
+    
+    .password-requirements {
+        font-size: 0.8rem;
+        color: var(--gray-color);
+        margin-top: 0.5rem;
+    }
+    
+    .invalid-feedback {
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card auth-card">
+                    <div class="row g-0">
+                        <div class="col-md-5 d-none d-md-block">
+                            <div class="auth-image"></div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="auth-content">
+                                <h1>Créer un compte</h1>
+                                <p class="text-muted">Rejoignez notre communauté d'apprentissage pour accéder à des milliers de cours.</p>
+                                
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                            {{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger" role="alert">
+                                        {% for error in form.non_field_errors %}
+                                            <p class="mb-0">{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Connexion avec réseaux sociaux -->
+                                <div class="social-login">
+                                    <a href="#" class="social-btn google">
+                                        <i class="fab fa-google"></i>
+                                    </a>
+                                    <a href="#" class="social-btn facebook">
+                                        <i class="fab fa-facebook-f"></i>
+                                    </a>
+                                    <a href="#" class="social-btn twitter">
+                                        <i class="fab fa-twitter"></i>
+                                    </a>
+                                </div>
+                                
+                                <div class="divider">
+                                    <hr>
+                                    <span>ou</span>
+                                    <hr>
+                                </div>
+                                
+                                <!-- Formulaire d'inscription -->
+                                <form method="post" action="{% url 'users:register' %}">
+                                    {% csrf_token %}
+                                    
+                                    <!-- Sélecteur de type d'utilisateur -->
+                                    <div class="user-type-selector">
+                                        <div class="form-check">
+                                            <div class="user-type-icon">
+                                                <i class="fas fa-user-graduate"></i>
+                                            </div>
+                                            <input class="form-check-input" type="radio" name="user_type" id="student" value="student" checked>
+                                            <label class="form-check-label" for="student">
+                                                
+                                                Étudiant
+                                            </label>
+                                            
+</div>
+                                        </div>
+                                        <div class="form-check">
+                                            <div class="user-type-icon">
+                                                <i class="fas fa-chalkboard-teacher"></i>
+                                            </div>
+                                            <input class="form-check-input" type="radio" name="user_type" id="instructor" value="instructor">
+                                            <label class="form-check-label" for="instructor">
+                                                
+                                                Instructeur
+                                            </label>
+                                        </div>
+                                        {% if form.user_type.errors %}
+                                             <div class="invalid-feedback d-block">
+                                                 {% for error in form.user_type.errors %}
+                                                     {{ error }}
+                                                 {% endfor %}
+                                             </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="id_first_name" class="form-label">Prénom</label>
+                                            <input type="text" name="first_name" class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" id="id_first_name" value="{{ form.first_name.value|default:'' }}" required>
+                                            {% if form.first_name.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.first_name.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="id_last_name" class="form-label">Nom</label>
+                                            <input type="text" name="last_name" class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" id="id_last_name" value="{{ form.last_name.value|default:'' }}" required>
+                                            {% if form.last_name.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.last_name.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="id_email" class="form-label">Email</label>
+                                        <input type="email" name="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" id="id_email" value="{{ form.email.value|default:'' }}" required>
+                                        {% if form.email.errors %}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.email.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="id_password1" class="form-label">Mot de passe</label>
+                                        <input type="password" name="password1" class="form-control {% if form.password1.errors %}is-invalid{% endif %}" id="id_password1" required>
+                                        {% if form.password1.errors %}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.password1.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="password-requirements">
+                                            <p class="mb-1">Le mot de passe doit :</p>
+                                            <ul class="ps-3 mb-0">
+                                                <li>Contenir au moins 8 caractères</li>
+                                                <li>Ne pas être trop commun</li>
+                                                <li>Contenir au moins un chiffre</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="id_password2" class="form-label">Confirmer le mot de passe</label>
+                                        <input type="password" name="password2" class="form-control {% if form.password2.errors %}is-invalid{% endif %}" id="id_password2" required>
+                                        {% if form.password2.errors %}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.password2.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-4 form-check">
+                                        <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                                        <label class="form-check-label" for="terms">
+                                            J'accepte les <a href="#" target="_blank">conditions d'utilisation</a> et la <a href="#" target="_blank">politique de confidentialité</a>
+                                        </label>
+                                    </div>
+                                    
+                                    <input type="hidden" name="next" value="{{ next }}">
+                                    
+                                    <button type="submit" class="btn btn-primary btn-auth w-100">
+                                        <i class="fas fa-user-plus me-2"></i> Créer mon compte
+                                    </button>
+                                </form>
+                                
+                                <div class="auth-footer">
+                                    <p>Déjà un compte? <a href="{% url 'users:login' %}">Se connecter</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userTypeRadios = document.querySelectorAll('input[name="user_type"]');
+        const userTypeContainers = document.querySelectorAll('.user-type-selector .form-check');
+        
+        userTypeRadios.forEach((radio, index) => {
+            radio.addEventListener('change', function() {
+                userTypeContainers.forEach(container => {
+                    container.style.borderColor = '#e9ecef';
+                    container.style.backgroundColor = 'transparent';
+                });
+                
+                if (this.checked) {
+                    userTypeContainers[index].style.borderColor = 'var(--primary-color)';
+                    userTypeContainers[index].style.backgroundColor = 'rgba(var(--primary-rgb), 0.05)';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

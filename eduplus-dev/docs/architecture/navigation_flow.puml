@@ -1,0 +1,92 @@
+@startuml
+skinparam ActivityBackgroundColor LightSkyBlue
+skinparam ActivityBorderColor DarkBlue
+
+start
+:Page d'accueil;
+
+if (Utilisateur connecté?) then (oui)
+  :Tableau de bord;
+  
+  split
+    :Mes cours;
+    
+    if (Étudiant?) then (oui)
+      :Liste des cours inscrits;
+      :Détails du cours;
+      
+      split
+        :Contenu du cours;
+        :Télécharger ressources;
+      split again
+        :Travaux pratiques;
+        :Soumettre devoir;
+      end split
+      
+    else (non)
+      :Liste des cours enseignés;
+      :Détails du cours;
+      
+      split
+        :Gérer contenu;
+        :Ajouter ressources;
+      split again
+        :Gérer travaux;
+        :Évaluer soumissions;
+      end split
+    endif
+    
+  split again
+    :Catalogue de cours;
+    :Détails du cours;
+    
+    if (Déjà inscrit?) then (non)
+      :Inscription;
+      :Paiement;
+      :Confirmation;
+    else (oui)
+      :Accéder au cours;
+    endif
+    
+  split again
+    if (Administrateur?) then (oui)
+      :Administration;
+      
+      split
+        :Gestion utilisateurs;
+      split again
+        :Gestion cours;
+      split again
+        :Rapports paiements;
+      end split
+    endif
+  end split
+  
+else (non)
+  :Page d'accueil publique;
+  
+  split
+    :Se connecter;
+    :Authentification;
+    
+    if (Authentification réussie?) then (oui)
+      :Tableau de bord;
+    else (non)
+      :Message d'erreur;
+    endif
+    
+  split again
+    :S'inscrire;
+    :Création de compte;
+    :Confirmation email;
+    :Connexion;
+  
+  split again
+    :Catalogue de cours;
+    :Détails du cours;
+    :Invitation à s'inscrire;
+  end split
+endif
+
+stop
+@enduml 

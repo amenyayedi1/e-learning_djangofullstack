@@ -1,0 +1,262 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    {% if course %}Modifier {{ course.title }}{% else %}Créer un cours{% endif %} | EduPlus
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background-color: var(--primary-color);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    .sidebar-nav {
+        position: sticky;
+        top: 90px;
+    }
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: var(--dark-color);
+        text-decoration: none;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    .sidebar-link:hover, .sidebar-link.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    .sidebar-link i {
+        margin-right: 0.75rem;
+        width: 20px;
+        text-align: center;
+    }
+    .preview-image {
+        max-width: 100%;
+        max-height: 200px;
+        border-radius: 8px;
+        display: block;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête -->
+<section class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="mb-2">{% if course %}Modifier un cours{% else %}Créer un cours{% endif %}</h1>
+                <p class="lead mb-0">{% if course %}Mettre à jour les informations du cours{% else %}Ajouter un nouveau cours à la plateforme{% endif %}</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% if course %}{% url 'dashboard:course_detail' course.id %}{% else %}{% url 'dashboard:courses_management' %}{% endif %}" class="btn btn-light me-2">
+                    <i class="fas fa-arrow-left me-1"></i> Retour
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Sidebar de navigation -->
+        <div class="col-lg-3 mb-4">
+            <div class="sidebar-nav">
+                <a href="{% url 'dashboard:admin' %}" class="sidebar-link">
+                    <i class="fas fa-home"></i> Tableau de bord
+                </a>
+                <a href="{% url 'dashboard:users' %}" class="sidebar-link">
+                    <i class="fas fa-users"></i> Utilisateurs
+                </a>
+                <a href="{% url 'dashboard:courses_management' %}" class="sidebar-link active">
+                    <i class="fas fa-chalkboard"></i> Cours
+                </a>
+                <a href="{% url 'dashboard:instructors' %}" class="sidebar-link">
+                    <i class="fas fa-chalkboard-teacher"></i> Instructeurs
+                </a>
+                <a href="{% url 'dashboard:students' %}" class="sidebar-link">
+                    <i class="fas fa-user-graduate"></i> Étudiants
+                </a>
+                <a href="{% url 'dashboard:transactions' %}" class="sidebar-link">
+                    <i class="fas fa-money-bill-wave"></i> Transactions
+                </a>
+                <a href="{% url 'dashboard:reports_management' %}" class="sidebar-link">
+                    <i class="fas fa-chart-line"></i> Rapports
+                </a>
+                <a href="{% url 'dashboard:settings' %}" class="sidebar-link">
+                    <i class="fas fa-cog"></i> Paramètres
+                </a>
+                <a href="{% url 'dashboard:notifications' %}" class="sidebar-link">
+                    <i class="fas fa-bell"></i> Notifications
+                </a>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-lg-9">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">{% if course %}Modifier{% else %}Créer{% endif %} un cours</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" action="{% if course %}{% url 'dashboard:course_edit' course.id %}{% else %}{% url 'dashboard:course_create' %}{% endif %}">
+                        {% csrf_token %}
+                        
+                        <!-- Informations de base -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="mb-3">Informations de base</h5>
+                            </div>
+                            
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label for="title" class="form-label">Titre du cours <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="title" name="title" value="{% if course %}{{ course.title }}{% endif %}" required>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label for="price" class="form-label">Prix (€) <span class="text-danger">*</span></label>
+                                    <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" value="{% if course %}{{ course.price }}{% else %}0.00{% endif %}" required>
+                                </div>
+                            </div>
+                            
+                            {% if not course %}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="instructor" class="form-label">Instructeur <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="instructor" name="instructor" required>
+                                        <option value="">Sélectionner un instructeur</option>
+                                        {% for instructor in instructors %}
+                                            <option value="{{ instructor.id }}">{{ instructor.get_full_name|default:instructor.username }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="col-md-{% if course %}6{% else %}6{% endif %}">
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Catégorie <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="category" name="category" required>
+                                        <option value="">Sélectionner une catégorie</option>
+                                        {% for category in categories %}
+                                            <option value="{{ category.id }}" {% if course and course.category.id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="difficulty_level" class="form-label">Niveau de difficulté <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="difficulty_level" name="difficulty_level" required>
+                                        <option value="beginner" {% if course and course.difficulty_level == 'beginner' %}selected{% endif %}>Débutant</option>
+                                        <option value="intermediate" {% if course and course.difficulty_level == 'intermediate' %}selected{% endif %}>Intermédiaire</option>
+                                        <option value="advanced" {% if course and course.difficulty_level == 'advanced' %}selected{% endif %}>Avancé</option>
+                                        <option value="expert" {% if course and course.difficulty_level == 'expert' %}selected{% endif %}>Expert</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="language" class="form-label">Langue <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="language" name="language" value="{% if course %}{{ course.language }}{% else %}Français{% endif %}" required>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="image" class="form-label">Image du cours</label>
+                                    <input type="file" class="form-control" id="image" name="image" accept="image/*">
+                                    {% if course and course.image %}
+                                        <img src="{{ course.image.url }}" alt="{{ course.title }}" class="preview-image mt-2">
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="is_published" class="form-label d-block">Statut</label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="is_published" name="is_published" {% if course and course.is_published %}checked{% endif %}>
+                                        <label class="form-check-label" for="is_published">Publier le cours</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Contenu du cours -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="mb-3">Contenu du cours</h5>
+                            </div>
+                            
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label for="overview" class="form-label">Description <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="overview" name="overview" rows="5" required>{% if course %}{{ course.overview }}{% endif %}</textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="objectives" class="form-label">Objectifs</label>
+                                    <textarea class="form-control" id="objectives" name="objectives" rows="4">{% if course %}{{ course.objectives }}{% endif %}</textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="requirements" class="form-label">Prérequis</label>
+                                    <textarea class="form-control" id="requirements" name="requirements" rows="4">{% if course %}{{ course.requirements }}{% endif %}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% if course %}{% url 'dashboard:course_detail' course.id %}{% else %}{% url 'dashboard:courses_management' %}{% endif %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i> {% if course %}Mettre à jour{% else %}Créer{% endif %} le cours
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Prévisualisation de l'image
+    document.getElementById('image').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                let preview = document.querySelector('.preview-image');
+                if (!preview) {
+                    preview = document.createElement('img');
+                    preview.className = 'preview-image';
+                    document.getElementById('image').parentNode.appendChild(preview);
+                }
+                preview.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %} 

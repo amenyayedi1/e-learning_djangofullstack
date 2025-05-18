@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modifier l'instructeur | EduPlus{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3">
+            <div class="dashboard-sidebar">
+                <a href="{% url 'dashboard:admin' %}" class="sidebar-link">
+                    <i class="fas fa-tachometer-alt"></i> Tableau de bord
+                </a>
+                <a href="{% url 'dashboard:users' %}" class="sidebar-link">
+                    <i class="fas fa-users"></i> Utilisateurs
+                </a>
+                <a href="{% url 'dashboard:courses_management' %}" class="sidebar-link">
+                    <i class="fas fa-chalkboard"></i> Cours
+                </a>
+                <a href="{% url 'dashboard:instructors' %}" class="sidebar-link active">
+                    <i class="fas fa-chalkboard-teacher"></i> Instructeurs
+                </a>
+                <a href="{% url 'dashboard:students' %}" class="sidebar-link">
+                    <i class="fas fa-user-graduate"></i> Étudiants
+                </a>
+                <a href="{% url 'dashboard:transactions' %}" class="sidebar-link">
+                    <i class="fas fa-money-bill-wave"></i> Transactions
+                </a>
+                <a href="{% url 'dashboard:reports_management' %}" class="sidebar-link">
+                    <i class="fas fa-chart-line"></i> Rapports
+                </a>
+                <a href="{% url 'dashboard:settings' %}" class="sidebar-link">
+                    <i class="fas fa-cog"></i> Paramètres
+                </a>
+                <a href="{% url 'dashboard:reports' %}" class="sidebar-link">
+                    <i class="fas fa-file-alt"></i> Rapports du site
+                </a>
+                <a href="{% url 'dashboard:notifications' %}" class="sidebar-link">
+                    <i class="fas fa-bell"></i> Notifications
+                </a>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-lg-9">
+            <div class="dashboard-header mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap">
+                    <div>
+                        <h2 class="h3 mb-0">Modifier l'instructeur</h2>
+                        <p class="text-muted">Modifier les informations de l'instructeur</p>
+                    </div>
+                    <div class="d-flex">
+                        <a href="{% url 'dashboard:instructor_detail' instructor.id %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Retour
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Informations de l'instructeur</h5>
+                </div>
+                <div class="card-body">
+                    <form action="{% url 'dashboard:instructor_edit' instructor.id %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="username" class="form-label">Nom d'utilisateur</label>
+                                <input type="text" class="form-control" id="username" name="username" value="{{ instructor.username }}" readonly>
+                                <small class="text-muted">Le nom d'utilisateur ne peut pas être modifié.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email</label>
+                                <input type="email" class="form-control" id="email" name="email" value="{{ instructor.email }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="first_name" class="form-label">Prénom</label>
+                                <input type="text" class="form-control" id="first_name" name="first_name" value="{{ instructor.first_name }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="last_name" class="form-label">Nom</label>
+                                <input type="text" class="form-control" id="last_name" name="last_name" value="{{ instructor.last_name }}">
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">Biographie</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="3">{{ instructor.bio }}</textarea>
+                        </div>
+                        
+                        <div class="form-check form-switch mb-3">
+                            <input class="form-check-input" type="checkbox" id="is_active" name="is_active" {% if instructor.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">Instructeur actif</label>
+                        </div>
+                        
+                        <h5 class="mt-4 mb-3">Options avancées</h5>
+                        
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading mb-2">Attention!</h6>
+                            <p class="mb-0">Les actions ci-dessous sont potentiellement dangereuses et peuvent affecter l'expérience de l'instructeur sur la plateforme.</p>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="reset_password" name="reset_password">
+                            <label class="form-check-label" for="reset_password">
+                                Envoyer un lien de réinitialisation de mot de passe
+                            </label>
+                            <div class="form-text">Un email avec un lien de réinitialisation de mot de passe sera envoyé à l'instructeur.</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'dashboard:instructor_detail' instructor.id %}" class="btn btn-outline-secondary me-md-2">Annuler</a>
+                            <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

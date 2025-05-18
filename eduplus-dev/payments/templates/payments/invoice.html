@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Facture #{{ payment.reference_id }} | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .invoice-container {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin: 2rem auto;
+        max-width: 800px;
+    }
+    
+    .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .invoice-logo {
+        max-width: 200px;
+    }
+    
+    .invoice-title {
+        font-size: 2rem;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+    
+    .invoice-meta {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+    }
+    
+    .invoice-meta-block {
+        max-width: 50%;
+    }
+    
+    .invoice-meta-title {
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--dark-color);
+    }
+    
+    .invoice-table {
+        width: 100%;
+        margin-bottom: 2rem;
+    }
+    
+    .invoice-table th {
+        background-color: #f8f9fa;
+    }
+    
+    .invoice-totals {
+        margin-left: auto;
+        width: 300px;
+    }
+    
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+    }
+    
+    .total-row.grand-total {
+        font-weight: 700;
+        font-size: 1.2rem;
+        border-top: 2px solid #f0f0f0;
+        padding-top: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .invoice-notes {
+        padding: 1.5rem;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        margin-bottom: 2rem;
+    }
+    
+    .invoice-footer {
+        text-align: center;
+        color: var(--gray-color);
+        font-size: 0.9rem;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #f0f0f0;
+    }
+    
+    .print-download {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 2rem;
+        gap: 1rem;
+    }
+    
+    @media print {
+        .print-download, .container > nav {
+            display: none;
+        }
+        .invoice-container {
+            box-shadow: none;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: white;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Boutons d'action -->
+    <div class="print-download">
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="fas fa-print me-1"></i> Imprimer
+        </button>
+        <a href="#" class="btn btn-outline-primary" id="download-pdf">
+            <i class="fas fa-download me-1"></i> Télécharger PDF
+        </a>
+    </div>
+    
+    <!-- Facture -->
+    <div class="invoice-container">
+        <div class="invoice-header">
+            <div>
+                <img src="{% static 'img/logo.png' %}" alt="EduPlus" class="invoice-logo">
+                <p class="mb-0 mt-2">Votre plateforme d'apprentissage en ligne</p>
+            </div>
+            <div class="text-end">
+                <div class="invoice-title">FACTURE</div>
+                <div>#{{ payment.reference_id }}</div>
+                <div>Date: {{ payment.created_at|date:"d/m/Y" }}</div>
+            </div>
+        </div>
+        
+        <div class="invoice-meta">
+            <div class="invoice-meta-block">
+                <div class="invoice-meta-title">Facturé à</div>
+                <div>{{ payment.user.get_full_name }}</div>
+                <div>{{ payment.user.email }}</div>
+                {% if payment.user.profile.address %}
+                    <div>{{ payment.user.profile.address }}</div>
+                {% endif %}
+                {% if payment.user.profile.city and payment.user.profile.postal_code %}
+                    <div>{{ payment.user.profile.postal_code }} {{ payment.user.profile.city }}</div>
+                {% endif %}
+                {% if payment.user.profile.country %}
+                    <div>{{ payment.user.profile.country }}</div>
+                {% endif %}
+            </div>
+            <div class="invoice-meta-block text-end">
+                <div class="invoice-meta-title">De</div>
+                <div>EduPlus SAS</div>
+                <div>123 Avenue de l'Éducation</div>
+                <div>75001 Paris, France</div>
+                <div>contact@eduplus.fr</div>
+                <div>N° TVA: FR12345678901</div>
+            </div>
+        </div>
+        
+        <table class="table invoice-table">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th class="text-end">Prix</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <strong>{{ payment.course.title }}</strong><br>
+                        <span class="text-muted">Accès au cours</span>
+                    </td>
+                    <td class="text-end">{{ payment.amount }} €</td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <div class="invoice-totals">
+            <div class="total-row">
+                <div>Sous-total</div>
+                <div>{{ payment.subtotal|default:payment.amount }} €</div>
+            </div>
+            
+            {% if payment.discount %}
+                <div class="total-row">
+                    <div>Réduction</div>
+                    <div>-{{ payment.discount }} €</div>
+                </div>
+            {% endif %}
+            
+            <div class="total-row">
+                <div>TVA ({{ payment.tax_rate|default:"20" }}%)</div>
+                <div>{{ payment.tax_amount|default:"0.00" }} €</div>
+            </div>
+            
+            <div class="total-row grand-total">
+                <div>Total</div>
+                <div>{{ payment.amount }} €</div>
+            </div>
+        </div>
+        
+        <div class="invoice-notes">
+            <strong>Notes:</strong>
+            <p class="mb-0">Merci pour votre achat sur EduPlus. Vous avez maintenant un accès complet et illimité au cours. Pour toute question concernant cette facture, veuillez contacter notre service client à support@eduplus.fr</p>
+        </div>
+        
+        <div class="invoice-footer">
+            <p>EduPlus SAS - SIRET: 123 456 789 00012 - Capital social: 10 000€</p>
+            <p class="mb-0">www.eduplus.fr</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const downloadButton = document.getElementById('download-pdf');
+        
+        if (downloadButton) {
+            downloadButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                alert('La fonctionnalité de téléchargement PDF sera implémentée dans une phase ultérieure.');
+                // Dans une vraie implémentation, nous utiliserions une bibliothèque comme jsPDF 
+                // ou nous appellerions une API backend pour générer le PDF
+            });
+        }
+    });
+</script>
+{% endblock %} 

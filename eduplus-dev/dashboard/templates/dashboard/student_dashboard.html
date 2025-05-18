@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tableau de bord étudiant | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background-color: var(--primary-color);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+        width: 60px;
+        height: 60px;
+        line-height: 60px;
+        text-align: center;
+        border-radius: 50%;
+    }
+    
+    .courses-progress {
+        margin-bottom: 2rem;
+    }
+    
+    .progress {
+        height: 8px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .course-card {
+        transition: transform 0.3s ease;
+    }
+    
+    .course-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .course-image {
+        height: 160px;
+        object-fit: cover;
+    }
+    
+    .course-progress-info {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+    }
+    
+    .badge-custom {
+        font-weight: normal;
+        padding: 0.35em 0.65em;
+    }
+    
+    .activity-item {
+        padding: 1rem;
+        border-left: 3px solid var(--primary-color);
+        background-color: white;
+        margin-bottom: 1rem;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .sidebar-nav {
+        position: sticky;
+        top: 90px;
+    }
+    
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: var(--dark-color);
+        text-decoration: none;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar-link:hover, .sidebar-link.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .sidebar-link i {
+        margin-right: 0.75rem;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .notification-badge {
+        margin-left: auto;
+        background-color: var(--danger-color);
+    }
+    
+    .sidebar-link:hover .notification-badge {
+        background-color: white;
+        color: var(--primary-color);
+    }
+    
+    .certificate-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    
+    .certificate-card:hover {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .certificate-header {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    .certificate-body {
+        padding: 1.5rem;
+        text-align: center;
+    }
+    
+    .certificate-icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête du tableau de bord -->
+<section class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="mb-2">Bonjour, {{ user.first_name }}!</h1>
+                <p class="lead mb-0">Bienvenue sur votre tableau de bord d'apprentissage</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'courses:course_list' %}" class="btn btn-light">
+                    <i class="fas fa-search me-1"></i> Explorer les cours
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Sidebar de navigation -->
+        <div class="col-lg-3 mb-4">
+            <div class="sidebar-nav">
+                <a href="{% url 'dashboard:student' %}" class="sidebar-link active">
+                    <i class="fas fa-home"></i> Tableau de bord
+                </a>
+                <a href="{% url 'dashboard:enrolled_courses' %}" class="sidebar-link">
+                    <i class="fas fa-book-open"></i> Mes cours
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-tasks"></i> Devoirs
+                    {% if pending_assignments > 0 %}
+                    <span class="badge rounded-pill notification-badge">{{ pending_assignments }}</span>
+                    {% endif %}
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-certificate"></i> Certificats
+                </a>
+                <a href="{% url 'payments:history' %}" class="sidebar-link">
+                    <i class="fas fa-receipt"></i> Achats
+                </a>
+                <a href="{% url 'users:profile' %}" class="sidebar-link">
+                    <i class="fas fa-user-cog"></i> Profil
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-bell"></i> Notifications
+                    {% if notifications > 0 %}
+                    <span class="badge rounded-pill notification-badge">{{ notifications }}</span>
+                    {% endif %}
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-question-circle"></i> Aide
+                </a>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-lg-9">
+            <!-- Statistiques -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary-light text-primary">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <h5>{{ enrolled_courses.count }}</h5>
+                    <p class="text-muted mb-0">Cours inscrits</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bg-success-light text-success">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h5>{{ completed_courses }}</h5>
+                    <p class="text-muted mb-0">Cours terminés</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bg-info-light text-info">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <h5>{{ total_learning_hours }}</h5>
+                    <p class="text-muted mb-0">Heures d'apprentissage</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning-light text-warning">
+                        <i class="fas fa-certificate"></i>
+                    </div>
+                    <h5>{{ certificates }}</h5>
+                    <p class="text-muted mb-0">Certificats obtenus</p>
+                </div>
+            </div>
+            
+            <!-- Progression des cours -->
+            <div class="courses-progress mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3>Progression de vos cours</h3>
+                    <a href="{% url 'dashboard:enrolled_courses' %}" class="btn btn-sm btn-outline-primary">Voir tous</a>
+                </div>
+                
+                {% if in_progress_courses %}
+                    <div class="row row-cols-1 row-cols-md-2 g-4">
+                        {% for enrollment in in_progress_courses %}
+                            <div class="col">
+                                <div class="card h-100 course-card">
+                                    {% if enrollment.course.image %}
+                                        <img src="{{ enrollment.course.image.url }}" class="card-img-top course-image" alt="{{ enrollment.course.title }}">
+                                    {% else %}
+                                        <img src="{% static 'img/course-placeholder.jpg' %}" class="card-img-top course-image" alt="{{ enrollment.course.title }}">
+                                    {% endif %}
+                                    
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ enrollment.course.title }}</h5>
+                                        <div class="course-progress-info">
+                                            <span>Progression: {{ enrollment.progress }}%</span>
+                                            <span class="text-muted">{{ enrollment.completed_modules }}/{{ enrollment.course.modules.count }} modules</span>
+                                        </div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: {{ enrollment.progress }}%" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        
+                                        <div class="d-flex justify-content-between align-items-center mt-3">
+                                            <div>
+                                                {% if enrollment.last_activity %}
+                                                <small class="text-muted">Dernière activité: {{ enrollment.last_activity|date:"d/m/Y" }}</small>
+                                                {% endif %}
+                                            </div>
+                                            <a href="{% url 'dashboard:course_progress' enrollment.course.slug %}" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-play-circle me-1"></i> Continuer
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center p-5 bg-light rounded">
+                        <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                        <h5>Vous n'avez pas encore commencé de cours</h5>
+                        <p>Explorez notre catalogue et inscrivez-vous à des cours pour commencer votre apprentissage.</p>
+                        <a href="{% url 'courses:course_list' %}" class="btn btn-primary mt-2">Découvrir des cours</a>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <div class="row">
+                <!-- Activités récentes -->
+                <div class="col-lg-7 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Activités récentes</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_activities %}
+                                {% for activity in recent_activities %}
+                                    <div class="activity-item">
+                                        <div class="d-flex justify-content-between">
+                                            <h6 class="mb-1">{{ activity.title }}</h6>
+                                            <small class="text-muted">{{ activity.timestamp|date:"d/m/Y H:i" }}</small>
+                                        </div>
+                                        <p class="mb-1">{{ activity.description }}</p>
+                                        {% if activity.course %}
+                                            <small>
+                                                <a href="{% url 'courses:course_detail' activity.course.slug %}">{{ activity.course.title }}</a>
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                                    <h5>Aucune activité récente</h5>
+                                    <p>Vos activités apparaîtront ici une fois que vous commencerez à suivre des cours.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rappels et tâches à faire -->
+                <div class="col-lg-5 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Rappels et tâches</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if upcoming_assignments %}
+                                <h6 class="mb-3">Devoirs à venir</h6>
+                                <ul class="list-group mb-4">
+                                    {% for assignment in upcoming_assignments %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-0">{{ assignment.title }}</h6>
+                                                <small class="text-muted">{{ assignment.course.title }}</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="badge {% if assignment.is_due_soon %}bg-danger{% else %}bg-warning{% endif %} badge-custom">
+                                                    {% if assignment.is_due_soon %}Urgent{% else %}{{ assignment.days_left }} jours{% endif %}
+                                                </span>
+                                                <br>
+                                                <small class="text-muted">{{ assignment.due_date|date:"d/m/Y" }}</small>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            
+                            {% if recommended_courses %}
+                                <h6 class="mb-3">Cours recommandés</h6>
+                                <ul class="list-group">
+                                    {% for course in recommended_courses %}
+                                        <li class="list-group-item">
+                                            <div class="d-flex">
+                                                {% if course.image %}
+                                                    <img src="{{ course.image.url }}" class="rounded me-3" width="50" height="50" alt="{{ course.title }}">
+                                                {% else %}
+                                                    <img src="{% static 'img/course-placeholder.jpg' %}" class="rounded me-3" width="50" height="50" alt="{{ course.title }}">
+                                                {% endif %}
+                                                <div>
+                                                    <h6 class="mb-0">{{ course.title }}</h6>
+                                                    <small class="text-muted">{{ course.instructor.get_full_name }}</small>
+                                                    <br>
+                                                    <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-sm btn-outline-primary mt-1">Voir le cours</a>
+                                                </div>
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                            
+                            {% if not upcoming_assignments and not recommended_courses %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                                    <h5>Aucune tâche en attente</h5>
+                                    <p>Vous êtes à jour avec vos devoirs et tâches.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Certificats -->
+            {% if certificates_list %}
+                <div class="mb-4">
+                    <h3 class="mb-4">Vos certificats</h3>
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        {% for certificate in certificates_list %}
+                            <div class="col">
+                                <div class="certificate-card">
+                                    <div class="certificate-header">
+                                        <h6 class="mb-0">{{ certificate.course.title }}</h6>
+                                    </div>
+                                    <div class="certificate-body">
+                                        <div class="certificate-icon">
+                                            <i class="fas fa-certificate"></i>
+                                        </div>
+                                        <p class="mb-3">Délivré le {{ certificate.issue_date|date:"d/m/Y" }}</p>
+                                        <a href="#" class="btn btn-sm btn-outline-primary">Télécharger</a>
+                                        <a href="#" class="btn btn-sm btn-outline-secondary">Partager</a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Avis sur {{ course.title }} | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-header {
+        background-color: var(--primary-color);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    
+    .rating-group {
+        margin-bottom: 2rem;
+    }
+    
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+        align-items: center;
+    }
+    
+    .star-rating input {
+        display: none;
+    }
+    
+    .star-rating label {
+        cursor: pointer;
+        width: 40px;
+        height: 40px;
+        margin: 0 5px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        background-image: url({% static 'img/star-empty.svg' %});
+        transition: 0.3s ease;
+    }
+    
+    .star-rating input:checked ~ label,
+    .star-rating input:checked + label,
+    .star-rating label:hover,
+    .star-rating label:hover ~ label {
+        background-image: url({% static 'img/star-filled.svg' %});
+    }
+    
+    .course-summary {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .course-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 5px;
+        margin-right: 1.5rem;
+    }
+    
+    .comment-area {
+        height: 150px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête de la page -->
+<section class="review-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="mb-2">{{ existing_review|yesno:"Modifier,Ajouter" }} un avis</h1>
+                <p class="mb-0">{{ course.title }}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Résumé du cours -->
+            <div class="course-summary">
+                {% if course.image %}
+                    <img src="{{ course.image.url }}" class="course-image" alt="{{ course.title }}">
+                {% else %}
+                    <img src="{% static 'img/course-placeholder.jpg' %}" class="course-image" alt="{{ course.title }}">
+                {% endif %}
+                
+                <div>
+                    <h4>{{ course.title }}</h4>
+                    <p class="text-muted mb-0">Par {{ course.instructor.get_full_name }}</p>
+                </div>
+            </div>
+            
+            <!-- Formulaire d'avis -->
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <!-- Notation par étoiles -->
+                        <div class="rating-group">
+                            <h5 class="mb-3">Votre note :</h5>
+                            <div class="star-rating">
+                                <input type="radio" name="rating" value="5" id="star-5" {% if existing_review.rating == 5 %}checked{% endif %}>
+                                <label for="star-5" title="5 étoiles"></label>
+                                
+                                <input type="radio" name="rating" value="4" id="star-4" {% if existing_review.rating == 4 %}checked{% endif %}>
+                                <label for="star-4" title="4 étoiles"></label>
+                                
+                                <input type="radio" name="rating" value="3" id="star-3" {% if existing_review.rating == 3 %}checked{% endif %}>
+                                <label for="star-3" title="3 étoiles"></label>
+                                
+                                <input type="radio" name="rating" value="2" id="star-2" {% if existing_review.rating == 2 %}checked{% endif %}>
+                                <label for="star-2" title="2 étoiles"></label>
+                                
+                                <input type="radio" name="rating" value="1" id="star-1" {% if existing_review.rating == 1 %}checked{% endif %}>
+                                <label for="star-1" title="1 étoile"></label>
+                            </div>
+                        </div>
+                        
+                        <!-- Commentaire -->
+                        <div class="mb-4">
+                            <h5 class="mb-3">Votre commentaire :</h5>
+                            <textarea class="form-control comment-area" name="comment" placeholder="Partagez votre expérience avec ce cours...">{{ existing_review.comment|default:'' }}</textarea>
+                            <small class="text-muted">Votre avis aidera d'autres étudiants à décider si ce cours leur convient.</small>
+                        </div>
+                        
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Retour au cours
+                            </a>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-{% if existing_review %}edit{% else %}paper-plane{% endif %} me-1"></i>
+                                {{ existing_review|yesno:"Mettre à jour,Publier" }} l'avis
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Remarque sur les avis -->
+            <div class="mt-4">
+                <p class="text-muted small">
+                    <i class="fas fa-info-circle me-1"></i>
+                    Les avis sont publics et visibles par tous les utilisateurs. Ils doivent respecter nos <a href="#">directives de la communauté</a>.
+                    Une fois soumis, votre avis ne peut être supprimé que par l'administrateur du site.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

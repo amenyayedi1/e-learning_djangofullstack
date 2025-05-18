@@ -1,0 +1,53 @@
+@startuml
+actor Étudiant
+participant "Page du Cours" as Page
+participant "Vue Inscription" as InscriptionView
+participant "Vue Paiement" as PaiementView
+participant "Stripe API" as Stripe
+participant "Base de Données" as DB
+
+Étudiant -> Page: Consulte le cours
+activate Page
+Page --> Étudiant: Affichage détails cours
+deactivate Page
+
+Étudiant -> Page: Clique sur "S'inscrire"
+activate Page
+Page -> InscriptionView: Redirection
+deactivate Page
+
+activate InscriptionView
+InscriptionView --> Étudiant: Formulaire d'inscription
+deactivate InscriptionView
+
+Étudiant -> InscriptionView: Soumet formulaire
+activate InscriptionView
+InscriptionView -> PaiementView: Redirection avec ID cours
+deactivate InscriptionView
+
+activate PaiementView
+PaiementView --> Étudiant: Interface de paiement
+deactivate PaiementView
+
+Étudiant -> PaiementView: Saisit infos carte
+activate PaiementView
+PaiementView -> Stripe: Demande de paiement
+activate Stripe
+
+Stripe --> PaiementView: Confirmation paiement
+deactivate Stripe
+
+PaiementView -> DB: Crée Enrollment(payé=True)
+activate DB
+DB --> PaiementView: Confirmation
+deactivate DB
+
+PaiementView -> DB: Crée Payment
+activate DB
+DB --> PaiementView: Confirmation
+deactivate DB
+
+PaiementView --> Étudiant: Confirmation inscription
+deactivate PaiementView
+
+@enduml 

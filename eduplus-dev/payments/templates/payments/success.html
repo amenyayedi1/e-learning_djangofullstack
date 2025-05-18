@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Paiement réussi | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .success-container {
+        min-height: 60vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 3rem 0;
+    }
+    
+    .success-icon {
+        font-size: 5rem;
+        color: var(--success-color);
+        margin-bottom: 2rem;
+    }
+    
+    .order-details {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        max-width: 600px;
+        width: 100%;
+    }
+    
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+    
+    .detail-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .detail-label {
+        font-weight: 500;
+        color: var(--gray-color);
+    }
+    
+    .action-buttons {
+        margin-top: 2rem;
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container success-container">
+    <div class="success-icon">
+        <i class="fas fa-check-circle"></i>
+    </div>
+    
+    <h1 class="mb-3">Paiement réussi !</h1>
+    <p class="lead mb-4">Merci pour votre achat. Votre inscription au cours a été confirmée.</p>
+    
+    <div class="order-details">
+        <h5 class="mb-4">Détails de la commande</h5>
+        
+        <div class="detail-row">
+            <span class="detail-label">Numéro de commande :</span>
+            <span>{{ payment.reference_id }}</span>
+        </div>
+        
+        <div class="detail-row">
+            <span class="detail-label">Date :</span>
+            <span>{{ payment.created_at|date:"d/m/Y H:i" }}</span>
+        </div>
+        
+        <div class="detail-row">
+            <span class="detail-label">Cours :</span>
+            <span>{{ payment.course.title }}</span>
+        </div>
+        
+        <div class="detail-row">
+            <span class="detail-label">Montant :</span>
+            <span>{{ payment.amount }} €</span>
+        </div>
+        
+        <div class="detail-row">
+            <span class="detail-label">Méthode de paiement :</span>
+            <span>{{ payment.payment_method }}</span>
+        </div>
+    </div>
+    
+    <p>Un e-mail de confirmation a été envoyé à <strong>{{ user.email }}</strong>.</p>
+    
+    <div class="action-buttons">
+        <a href="{% url 'courses:course_detail' payment.course.slug %}" class="btn btn-primary">
+            <i class="fas fa-play-circle me-1"></i> Commencer le cours
+        </a>
+        
+        <a href="{% url 'payments:invoice' payment.id %}" class="btn btn-outline-secondary">
+            <i class="fas fa-file-invoice me-1"></i> Télécharger la facture
+        </a>
+        
+        <a href="{% url 'dashboard:home' %}" class="btn btn-outline-primary">
+            <i class="fas fa-home me-1"></i> Tableau de bord
+        </a>
+    </div>
+</div>
+{% endblock %} 

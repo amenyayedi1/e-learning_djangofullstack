@@ -1,0 +1,54 @@
+{% load static %}
+
+<div class="card course-card h-100">
+    {% if course.image %}
+        <img src="{{ course.image.url }}" class="card-img-top" alt="{{ course.title }}">
+    {% else %}
+        <img src="{% static 'img/course-placeholder.jpg' %}" class="card-img-top" alt="{{ course.title }}">
+    {% endif %}
+    
+    {% if course.discount_price %}
+        <span class="badge bg-warning">Promo</span>
+    {% endif %}
+    
+    <div class="card-body d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h5 class="card-title mb-0">{{ course.title }}</h5>
+            <span class="badge {% if course.difficulty_level == 'beginner' %}bg-success{% elif course.difficulty_level == 'intermediate' %}bg-primary{% elif course.difficulty_level == 'advanced' %}bg-warning{% else %}bg-danger{% endif %}">
+                {{ course.get_difficulty_level_display }}
+            </span>
+        </div>
+        
+        <p class="card-text small text-muted mb-1">{{ course.category.name }}</p>
+        <p class="card-text mb-2 flex-grow-1">{{ course.overview|truncatechars:100 }}</p>
+        
+        <div class="d-flex justify-content-between align-items-center mt-auto">
+            <div>
+                {% if course.discount_price %}
+                    <span class="text-decoration-line-through text-muted me-1">{{ course.price }} €</span>
+                    <span class="fw-bold text-danger">{{ course.discount_price }} €</span>
+                {% elif course.price == 0 %}
+                    <span class="fw-bold text-success">Gratuit</span>
+                {% else %}
+                    <span class="fw-bold">{{ course.price }} €</span>
+                {% endif %}
+            </div>
+            
+            <div class="d-flex align-items-center">
+                <div class="me-2">
+                    <i class="fas fa-star text-warning"></i>
+                    <span>{{ course.average_rating|default:"N/A" }}</span>
+                </div>
+                <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-sm btn-outline-primary">Voir</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-footer bg-white">
+        <div class="d-flex align-items-center">
+            <img src="{% if course.instructor.profile_picture %}{{ course.instructor.profile_picture.url }}{% else %}{% static 'img/default-user.png' %}{% endif %}" 
+                 class="rounded-circle me-2" width="30" height="30" alt="{{ course.instructor.get_full_name }}">
+            <small class="text-muted">{{ course.instructor.get_full_name }}</small>
+        </div>
+    </div>
+</div> 

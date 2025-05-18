@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Historique des paiements | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payments-header {
+        background-color: var(--primary-color);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    
+    .payment-card {
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+    
+    .payment-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .payment-header {
+        padding: 1.25rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .payment-status {
+        font-size: 0.85rem;
+        padding: 0.35em 0.65em;
+        border-radius: 30px;
+    }
+    
+    .payment-body {
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .payment-course-image {
+        width: 120px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 5px;
+    }
+    
+    .payment-details {
+        flex: 1;
+        margin-left: 1.25rem;
+    }
+    
+    .payment-amount {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-left: 1.25rem;
+    }
+    
+    .payment-actions {
+        padding: 1rem 1.25rem;
+        background-color: #f8f9fa;
+        border-top: 1px solid #f0f0f0;
+    }
+    
+    .filters {
+        margin-bottom: 2rem;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 3rem 0;
+    }
+    
+    .empty-icon {
+        font-size: 3rem;
+        color: var(--gray-color);
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête de la page -->
+<section class="payments-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="mb-2">Historique des paiements</h1>
+                <p class="mb-0">Retrouvez tous vos achats et téléchargez vos factures</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <!-- Filtres -->
+    <div class="filters">
+        <div class="row">
+            <div class="col-md-4">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Rechercher...">
+                    <button class="btn btn-outline-secondary" type="button">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select">
+                    <option value="">Tous les statuts</option>
+                    <option value="completed">Complété</option>
+                    <option value="pending">En attente</option>
+                    <option value="refunded">Remboursé</option>
+                    <option value="failed">Échoué</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select">
+                    <option value="">Toutes les dates</option>
+                    <option value="30">Derniers 30 jours</option>
+                    <option value="90">Derniers 3 mois</option>
+                    <option value="180">Derniers 6 mois</option>
+                    <option value="365">Dernière année</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100">
+                    <i class="fas fa-filter me-1"></i> Filtrer
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    {% if payments %}
+        <div class="payments-list">
+            {% for payment in payments %}
+                <div class="payment-card">
+                    <div class="payment-header">
+                        <div>
+                            <span class="text-muted">Commande #{{ payment.reference_id }}</span>
+                            <br>
+                            <small class="text-muted">{{ payment.created_at|date:"d/m/Y H:i" }}</small>
+                        </div>
+                        
+                        {% if payment.status == 'completed' %}
+                            <span class="payment-status bg-success text-white">Payé</span>
+                        {% elif payment.status == 'pending' %}
+                            <span class="payment-status bg-warning text-dark">En attente</span>
+                        {% elif payment.status == 'refunded' %}
+                            <span class="payment-status bg-info text-white">Remboursé</span>
+                        {% else %}
+                            <span class="payment-status bg-danger text-white">Échoué</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="payment-body">
+                        {% if payment.course.image %}
+                            <img src="{{ payment.course.image.url }}" class="payment-course-image" alt="{{ payment.course.title }}">
+                        {% else %}
+                            <img src="{% static 'img/course-placeholder.jpg' %}" class="payment-course-image" alt="{{ payment.course.title }}">
+                        {% endif %}
+                        
+                        <div class="payment-details">
+                            <h5 class="mb-1">{{ payment.course.title }}</h5>
+                            <p class="mb-0 text-muted">{{ payment.payment_method }}</p>
+                        </div>
+                        
+                        <div class="payment-amount">
+                            {{ payment.amount }} €
+                        </div>
+                    </div>
+                    
+                    <div class="payment-actions">
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'courses:course_detail' payment.course.slug %}" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-eye me-1"></i> Voir le cours
+                            </a>
+                            
+                            <div>
+                                {% if payment.status == 'completed' %}
+                                    <a href="{% url 'payments:invoice' payment.id %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="fas fa-file-invoice me-1"></i> Facture
+                                    </a>
+                                {% endif %}
+                                
+                                <a href="#" class="btn btn-sm btn-outline-info ms-2">
+                                    <i class="fas fa-info-circle me-1"></i> Détails
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if payments.has_other_pages %}
+            <nav aria-label="Pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if payments.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ payments.previous_page_number }}" aria-label="Précédent">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&laquo;</span>
+                        </li>
+                    {% endif %}
+                    
+                    {% for i in payments.paginator.page_range %}
+                        {% if payments.number == i %}
+                            <li class="page-item active"><span class="page-link">{{ i }}</span></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ i }}">{{ i }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if payments.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ payments.next_page_number }}" aria-label="Suivant">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">&raquo;</span>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+        
+    {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <h3>Aucun paiement trouvé</h3>
+            <p class="text-muted">Vous n'avez pas encore effectué d'achat sur notre plateforme.</p>
+            <a href="{% url 'courses:course_list' %}" class="btn btn-primary mt-3">
+                <i class="fas fa-shopping-cart me-1"></i> Explorer les cours
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

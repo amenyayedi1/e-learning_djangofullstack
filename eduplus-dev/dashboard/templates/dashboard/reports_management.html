@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gestion des Rapports | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background-color: var(--primary-color);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    
+    .stat-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .sidebar-nav {
+        position: sticky;
+        top: 90px;
+    }
+    
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: var(--dark-color);
+        text-decoration: none;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar-link:hover, .sidebar-link.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .sidebar-link i {
+        margin-right: 0.75rem;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .report-card {
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .report-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .report-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .report-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête -->
+<section class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="mb-2">Gestion des Rapports</h1>
+                <p class="lead mb-0">Accédez à tous les rapports et analyses de votre plateforme</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'admin:index' %}" class="btn btn-light me-2">
+                    <i class="fas fa-cog me-1"></i> Admin Django
+                </a>
+                <a href="#" class="btn btn-light">
+                    <i class="fas fa-file-export me-1"></i> Exporter
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Sidebar de navigation -->
+        <div class="col-lg-3 mb-4">
+            <div class="sidebar-nav">
+                <a href="{% url 'dashboard:admin' %}" class="sidebar-link">
+                    <i class="fas fa-home"></i> Tableau de bord
+                </a>
+                <a href="{% url 'dashboard:users' %}" class="sidebar-link">
+                    <i class="fas fa-users"></i> Utilisateurs
+                </a>
+                <a href="{% url 'dashboard:courses_management' %}" class="sidebar-link">
+                    <i class="fas fa-chalkboard"></i> Cours
+                </a>
+                <a href="{% url 'dashboard:instructors' %}" class="sidebar-link">
+                    <i class="fas fa-chalkboard-teacher"></i> Instructeurs
+                </a>
+                <a href="{% url 'dashboard:students' %}" class="sidebar-link">
+                    <i class="fas fa-user-graduate"></i> Étudiants
+                </a>
+                <a href="{% url 'dashboard:transactions' %}" class="sidebar-link">
+                    <i class="fas fa-money-bill-wave"></i> Transactions
+                </a>
+                <a href="{% url 'dashboard:reports_management' %}" class="sidebar-link active">
+                    <i class="fas fa-chart-line"></i> Rapports
+                </a>
+                <a href="{% url 'dashboard:settings' %}" class="sidebar-link">
+                    <i class="fas fa-cog"></i> Paramètres
+                </a>
+                <a href="{% url 'dashboard:reports' %}" class="sidebar-link">
+                    <i class="fas fa-file-alt"></i> Rapports du site
+                </a>
+                <a href="{% url 'dashboard:notifications' %}" class="sidebar-link">
+                    <i class="fas fa-bell"></i> Notifications
+                </a>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-lg-9">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-info-circle me-2"></i> Sélectionnez un rapport pour visualiser les données détaillées et générer des analyses.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Rapport des utilisateurs -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card report-card h-100">
+                        <div class="card-body text-center">
+                            <div class="report-icon text-primary">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h5 class="card-title">Rapport des Utilisateurs</h5>
+                            <p class="card-text text-muted">Statistiques des inscriptions et activités des utilisateurs</p>
+                            <a href="#" class="btn btn-outline-primary mt-3">Générer</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rapport des cours -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card report-card h-100">
+                        <div class="card-body text-center">
+                            <div class="report-icon text-success">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <h5 class="card-title">Rapport des Cours</h5>
+                            <p class="card-text text-muted">Performances et statistiques des cours</p>
+                            <a href="#" class="btn btn-outline-success mt-3">Générer</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rapport financier -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card report-card h-100">
+                        <div class="card-body text-center">
+                            <div class="report-icon text-warning">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <h5 class="card-title">Rapport Financier</h5>
+                            <p class="card-text text-muted">Revenus, transactions et analyses financières</p>
+                            <a href="#" class="btn btn-outline-warning mt-3">Générer</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rapport de satisfaction -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card report-card h-100">
+                        <div class="card-body text-center">
+                            <div class="report-icon text-info">
+                                <i class="fas fa-smile"></i>
+                            </div>
+                            <h5 class="card-title">Rapport de Satisfaction</h5>
+                            <p class="card-text text-muted">Évaluations et avis des utilisateurs</p>
+                            <a href="#" class="btn btn-outline-info mt-3">Générer</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rapport d'activités -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card report-card h-100">
+                        <div class="card-body text-center">
+                            <div class="report-icon text-danger">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <h5 class="card-title">Rapport d'Activités</h5>
+                            <p class="card-text text-muted">Suivi des activités et engagements</p>
+                            <a href="#" class="btn btn-outline-danger mt-3">Générer</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Rapport personnalisé -->
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card report-card h-100">
+                        <div class="card-body text-center">
+                            <div class="report-icon text-secondary">
+                                <i class="fas fa-sliders-h"></i>
+                            </div>
+                            <h5 class="card-title">Rapport Personnalisé</h5>
+                            <p class="card-text text-muted">Créez votre propre rapport avec les données de votre choix</p>
+                            <a href="#" class="btn btn-outline-secondary mt-3">Créer</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Rapports programmés -->
+            <div class="card mt-4">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Rapports programmés</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nom du rapport</th>
+                                    <th>Fréquence</th>
+                                    <th>Dernière exécution</th>
+                                    <th>Prochaine exécution</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Rapport hebdomadaire des ventes</td>
+                                    <td>Hebdomadaire</td>
+                                    <td>10/05/2025</td>
+                                    <td>17/05/2025</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Rapport mensuel des utilisateurs</td>
+                                    <td>Mensuel</td>
+                                    <td>01/05/2025</td>
+                                    <td>01/06/2025</td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-warning">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-white text-end">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus me-1"></i> Programmer un rapport
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

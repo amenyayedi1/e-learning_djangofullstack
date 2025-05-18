@@ -1,0 +1,629 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ module.title }} | {{ course.title }} | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .course-header {
+        background-color: var(--primary-color);
+        padding: 1.5rem 0;
+        color: white;
+    }
+    
+    .course-progress {
+        height: 8px;
+        margin-top: 1rem;
+    }
+    
+    .module-sidebar {
+        position: sticky;
+        top: 90px;
+        max-height: calc(100vh - 120px);
+        overflow-y: auto;
+    }
+    
+    .module-list {
+        list-style: none;
+        padding-left: 0;
+        margin-bottom: 0;
+    }
+    
+    .module-item {
+        border-left: 2px solid #e9ecef;
+        padding-left: 1.5rem;
+        position: relative;
+        margin-bottom: 1rem;
+    }
+    
+    .module-item:before {
+        content: '';
+        position: absolute;
+        left: -6px;
+        top: 0;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+    }
+    
+    .module-item.active {
+        border-left: 2px solid var(--primary-color);
+    }
+    
+    .module-item.active:before {
+        background-color: var(--primary-color);
+    }
+    
+    .module-item.completed {
+        border-left: 2px solid var(--success-color);
+    }
+    
+    .module-item.completed:before {
+        background-color: var(--success-color);
+    }
+    
+    .module-link {
+        display: block;
+        color: var(--dark-color);
+        text-decoration: none;
+        padding: 0.5rem 0;
+        font-weight: 500;
+    }
+    
+    .module-link:hover {
+        color: var(--primary-color);
+    }
+    
+    .module-link.active {
+        color: var(--primary-color);
+    }
+    
+    .content-list {
+        list-style: none;
+        padding-left: 1.5rem;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .content-item {
+        position: relative;
+        margin-bottom: 0.5rem;
+    }
+    
+    .content-item:before {
+        content: '';
+        position: absolute;
+        left: -12px;
+        top: 10px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+    }
+    
+    .content-item.active:before {
+        background-color: var(--primary-color);
+    }
+    
+    .content-item.completed:before {
+        background-color: var(--success-color);
+    }
+    
+    .content-link {
+        display: block;
+        color: var(--gray-color);
+        text-decoration: none;
+        padding: 0.25rem 0;
+        font-size: 0.9rem;
+    }
+    
+    .content-link:hover {
+        color: var(--primary-color);
+    }
+    
+    .content-link.active {
+        color: var(--primary-color);
+        font-weight: 500;
+    }
+    
+    .module-content {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+    
+    .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 8px;
+    }
+    
+    .content-nav {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .btn-prev, .btn-next {
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .btn-prev i {
+        margin-right: 0.5rem;
+    }
+    
+    .btn-next i {
+        margin-left: 0.5rem;
+    }
+    
+    .assignment-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 2rem;
+    }
+    
+    .assignment-header {
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .assignment-body {
+        padding: 1.5rem;
+    }
+    
+    .assignment-meta {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        color: var(--gray-color);
+        font-size: 0.9rem;
+    }
+    
+    .assignment-meta > div {
+        margin-right: 1.5rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .assignment-meta i {
+        margin-right: 0.5rem;
+    }
+    
+    .notes-section {
+        margin-top: 2rem;
+    }
+    
+    .notes-section textarea {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        resize: vertical;
+        min-height: 120px;
+    }
+    
+    .bookmark-btn {
+        color: var(--gray-color);
+        border: none;
+        background: none;
+        cursor: pointer;
+        padding: 0;
+        transition: color 0.2s;
+    }
+    
+    .bookmark-btn:hover, .bookmark-btn.active {
+        color: var(--warning-color);
+    }
+    
+    .completed-badge {
+        background-color: var(--success-color);
+        color: white;
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 30px;
+        margin-left: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .completed-badge i {
+        margin-right: 0.25rem;
+    }
+    
+    .quiz-option {
+        display: block;
+        padding: 1rem;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .quiz-option:hover {
+        border-color: var(--primary-color);
+        background-color: rgba(var(--primary-rgb), 0.05);
+    }
+    
+    .quiz-option input[type="radio"] {
+        margin-right: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête du cours -->
+<section class="course-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <h1 class="h3 mb-2">{{ course.title }}</h1>
+                <p class="mb-0">Module {{ module.order }} sur {{ course.modules.count }}</p>
+                <div class="progress course-progress">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {{ enrollment.progress }}%" aria-valuenow="{{ enrollment.progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+            <div class="col-lg-4 text-lg-end d-flex align-items-center justify-content-lg-end">
+                <a href="{% url 'courses:course_detail' course.slug %}" class="btn btn-outline-light me-2">
+                    <i class="fas fa-arrow-left me-1"></i> Retour au cours
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-light dropdown-toggle" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-cog me-1"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-download me-2"></i> Télécharger les ressources</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-flag me-2"></i> Signaler un problème</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-share-alt me-2"></i> Partager</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Sidebar des modules -->
+        <div class="col-lg-4 mb-4">
+            <div class="module-sidebar card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Contenu du cours</h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="module-list">
+                        {% for mod in course.modules.all %}
+                            <li class="module-item {% if mod.id == module.id %}active{% endif %} {% if mod.is_completed %}completed{% endif %}">
+                                <a href="{% url 'courses:module_detail' course.slug mod.id %}" class="module-link {% if mod.id == module.id %}active{% endif %}">
+                                    Module {{ mod.order }}: {{ mod.title }}
+                                    {% if mod.is_completed %}
+                                        <span class="completed-badge"><i class="fas fa-check"></i> Terminé</span>
+                                    {% endif %}
+                                </a>
+                                
+                                {% if mod.id == module.id %}
+                                    <ul class="content-list">
+                                        {% for content in mod.contents.all %}
+                                            <li class="content-item {% if content.id == current_content.id %}active{% endif %} {% if content.is_completed %}completed{% endif %}">
+                                                <a href="{% url 'courses:content_detail' course.slug mod.id content.id %}" class="content-link {% if content.id == current_content.id %}active{% endif %}">
+                                                    {% if content.content_type == 'video' %}
+                                                        <i class="fas fa-play-circle me-1"></i>
+                                                    {% elif content.content_type == 'text' %}
+                                                        <i class="fas fa-file-alt me-1"></i>
+                                                    {% elif content.content_type == 'file' %}
+                                                        <i class="fas fa-file-download me-1"></i>
+                                                    {% elif content.content_type == 'image' %}
+                                                        <i class="fas fa-image me-1"></i>
+                                                    {% elif content.content_type == 'quiz' %}
+                                                        <i class="fas fa-question-circle me-1"></i>
+                                                    {% else %}
+                                                        <i class="fas fa-link me-1"></i>
+                                                    {% endif %}
+                                                    {{ content.title }}
+                                                </a>
+                                            </li>
+                                        {% endfor %}
+                                        
+                                        {% for assignment in mod.assignments.all %}
+                                            <li class="content-item {% if assignment.id == current_assignment.id %}active{% endif %} {% if assignment.is_completed %}completed{% endif %}">
+                                                <a href="{% url 'courses:assignment_detail' course.slug mod.id assignment.id %}" class="content-link {% if assignment.id == current_assignment.id %}active{% endif %}">
+                                                    <i class="fas fa-clipboard-check me-1"></i> {{ assignment.title }}
+                                                </a>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-lg-8">
+            <div class="module-content">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <h2 class="mb-2">{{ module.title }}</h2>
+                        <div class="text-muted">
+                            <i class="far fa-clock me-1"></i> {{ module.duration|default:"30 min" }} de lecture
+                        </div>
+                    </div>
+                    <button class="bookmark-btn {% if is_bookmarked %}active{% endif %}" title="Ajouter aux favoris">
+                        <i class="{% if is_bookmarked %}fas{% else %}far{% endif %} fa-bookmark fa-lg"></i>
+                    </button>
+                </div>
+                
+                <p class="mb-4">{{ module.description }}</p>
+                
+                {% if current_content.content_type == 'video' %}
+                    <div class="video-container">
+                        <iframe src="{{ current_content.video_url }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                    </div>
+                    
+                    <h3 class="h5 mb-3">{{ current_content.title }}</h3>
+                    <div class="content-text">
+                        {{ current_content.text|safe }}
+                    </div>
+                {% elif current_content.content_type == 'text' %}
+                    <h3 class="h5 mb-3">{{ current_content.title }}</h3>
+                    <div class="content-text">
+                        {{ current_content.text|safe }}
+                    </div>
+                {% elif current_content.content_type == 'image' %}
+                    <h3 class="h5 mb-3">{{ current_content.title }}</h3>
+                    <div class="text-center mb-4">
+                        <img src="{{ current_content.file.url }}" alt="{{ current_content.title }}" class="img-fluid rounded">
+                    </div>
+                    <div class="content-text">
+                        {{ current_content.text|safe }}
+                    </div>
+                {% elif current_content.content_type == 'file' %}
+                    <h3 class="h5 mb-3">{{ current_content.title }}</h3>
+                    <div class="mb-4">
+                        <a href="{{ current_content.file.url }}" class="btn btn-outline-primary" download>
+                            <i class="fas fa-download me-1"></i> Télécharger le fichier
+                        </a>
+                    </div>
+                    <div class="content-text">
+                        {{ current_content.text|safe }}
+                    </div>
+                {% elif current_content.content_type == 'quiz' %}
+                    <h3 class="h5 mb-3">{{ current_content.title }}</h3>
+                    <div class="content-text mb-4">
+                        {{ current_content.text|safe }}
+                    </div>
+                    
+                    <form method="post" action="{% url 'courses:submit_quiz' course.slug module.id current_content.id %}">
+                        {% csrf_token %}
+                        {% for question in current_content.questions.all %}
+                            <div class="mb-4">
+                                <h4 class="h6 mb-3">{{ forloop.counter }}. {{ question.question_text }}</h4>
+                                {% for option in question.options.all %}
+                                    <label class="quiz-option">
+                                        <input type="radio" name="question_{{ question.id }}" value="{{ option.id }}" required>
+                                        {{ option.option_text }}
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                        
+                        <div class="text-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check me-1"></i> Soumettre les réponses
+                            </button>
+                        </div>
+                    </form>
+                {% endif %}
+                
+                {% if current_assignment %}
+                    <div class="assignment-card">
+                        <div class="assignment-header">
+                            <h3 class="h5 mb-0">{{ current_assignment.title }}</h3>
+                        </div>
+                        <div class="assignment-body">
+                            <div class="assignment-meta">
+                                <div>
+                                    <i class="fas fa-calendar-alt"></i> Date limite: {{ current_assignment.due_date|date:"d/m/Y" }}
+                                </div>
+                                <div>
+                                    <i class="fas fa-trophy"></i> Points: {{ current_assignment.max_score }}
+                                </div>
+                                <div>
+                                    <i class="fas fa-clock"></i> Temps estimé: {{ current_assignment.estimated_time|default:"30 min" }}
+                                </div>
+                            </div>
+                            
+                            <div class="assignment-description mb-4">
+                                {{ current_assignment.description|safe }}
+                            </div>
+                            
+                            {% if submission_form %}
+                                <form method="post" enctype="multipart/form-data" action="{% url 'courses:assignment_submit' course.slug module.id current_assignment.id %}">
+                                    {% csrf_token %}
+                                    <div class="mb-3">
+                                        <label for="id_submission_text" class="form-label">Votre réponse</label>
+                                        <textarea class="form-control" id="id_submission_text" name="submission_text" rows="5" required></textarea>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="id_submission_file" class="form-label">Pièce jointe (facultatif)</label>
+                                        <input type="file" class="form-control" id="id_submission_file" name="submission_file">
+                                        <div class="form-text">Formats acceptés: PDF, DOCX, ZIP (max 10 MB)</div>
+                                    </div>
+                                    
+                                    <div class="text-end">
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-paper-plane me-1"></i> Soumettre le devoir
+                                        </button>
+                                    </div>
+                                </form>
+                            {% endif %}
+                            
+                            {% if user_submission %}
+                                <div class="alert alert-success">
+                                    <h4 class="alert-heading h6">Devoir soumis!</h4>
+                                    <p class="mb-0">Vous avez soumis ce devoir le {{ user_submission.submission_date|date:"d/m/Y à H:i" }}.</p>
+                                    {% if user_submission.is_graded %}
+                                        <hr>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>Note: <strong>{{ user_submission.score }}/{{ current_assignment.max_score }}</strong></div>
+                                            <a href="{% url 'courses:submission_detail' course.slug module.id current_assignment.id user_submission.id %}" class="btn btn-sm btn-outline-primary">Voir les détails</a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <div class="notes-section">
+                    <h4 class="h6 mb-3">Mes notes</h4>
+                    <textarea class="form-control" id="user_notes" placeholder="Prenez des notes sur ce module...">{{ user_notes }}</textarea>
+                    <div class="text-end mt-2">
+                        <button class="btn btn-sm btn-primary save-notes-btn">
+                            <i class="fas fa-save me-1"></i> Enregistrer
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="content-nav">
+                    {% if prev_content %}
+                        <a href="{% url 'courses:content_detail' course.slug module.id prev_content.id %}" class="btn btn-outline-primary btn-prev">
+                            <i class="fas fa-arrow-left"></i> Précédent
+                        </a>
+                    {% elif prev_module %}
+                        <a href="{% url 'courses:module_detail' course.slug prev_module.id %}" class="btn btn-outline-primary btn-prev">
+                            <i class="fas fa-arrow-left"></i> Module précédent
+                        </a>
+                    {% else %}
+                        <div></div>
+                    {% endif %}
+                    
+                    {% if not current_content.is_completed %}
+                        <form method="post" action="{% url 'courses:mark_completed' course.slug module.id %}{% if current_content %}?content_id={{ current_content.id }}{% endif %}{% if current_assignment %}?assignment_id={{ current_assignment.id }}{% endif %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-check me-1"></i> Marquer comme terminé
+                            </button>
+                        </form>
+                    {% else %}
+                        <span class="btn btn-outline-success disabled">
+                            <i class="fas fa-check me-1"></i> Terminé
+                        </span>
+                    {% endif %}
+                    
+                    {% if next_content %}
+                        <a href="{% url 'courses:content_detail' course.slug module.id next_content.id %}" class="btn btn-outline-primary btn-next">
+                            Suivant <i class="fas fa-arrow-right"></i>
+                        </a>
+                    {% elif next_module %}
+                        <a href="{% url 'courses:module_detail' course.slug next_module.id %}" class="btn btn-outline-primary btn-next">
+                            Module suivant <i class="fas fa-arrow-right"></i>
+                        </a>
+                    {% else %}
+                        <a href="{% url 'courses:course_complete' course.slug %}" class="btn btn-primary btn-next">
+                            Terminer le cours <i class="fas fa-check-circle"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Enregistrement des notes
+        const notesTextarea = document.getElementById('user_notes');
+        const saveNotesBtn = document.querySelector('.save-notes-btn');
+        
+        if (notesTextarea && saveNotesBtn) {
+            saveNotesBtn.addEventListener('click', function() {
+                const notes = notesTextarea.value;
+                
+                // Envoyer les notes via AJAX
+                fetch('{% url "courses:save_notes" course.slug module.id %}{% if current_content %}?content_id={{ current_content.id }}{% endif %}{% if current_assignment %}?assignment_id={{ current_assignment.id }}{% endif %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ notes: notes })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Notes enregistrées avec succès !');
+                    } else {
+                        alert('Erreur lors de l\'enregistrement des notes.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Une erreur est survenue. Veuillez réessayer.');
+                });
+            });
+        }
+        
+        // Bookmark
+        const bookmarkBtn = document.querySelector('.bookmark-btn');
+        if (bookmarkBtn) {
+            bookmarkBtn.addEventListener('click', function() {
+                // Toggle de la classe active
+                this.classList.toggle('active');
+                
+                // Toggle de l'icône
+                const icon = this.querySelector('i');
+                if (icon.classList.contains('far')) {
+                    icon.classList.remove('far');
+                    icon.classList.add('fas');
+                } else {
+                    icon.classList.remove('fas');
+                    icon.classList.add('far');
+                }
+                
+                // Envoyer la mise à jour via AJAX
+                fetch('{% url "courses:toggle_bookmark" course.slug module.id %}{% if current_content %}?content_id={{ current_content.id }}{% endif %}{% if current_assignment %}?assignment_id={{ current_assignment.id }}{% endif %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        alert('Erreur lors de la mise à jour des favoris.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Une erreur est survenue. Veuillez réessayer.');
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}

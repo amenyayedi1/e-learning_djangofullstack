@@ -1,0 +1,53 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+
+actor Student as "Étudiant"
+actor Instructor as "Enseignant"
+actor Admin as "Administrateur"
+
+rectangle "Plateforme E-Learning" {
+  usecase "S'inscrire" as UC1
+  usecase "Se connecter" as UC2
+  usecase "Parcourir les cours" as UC3
+  usecase "S'inscrire à un cours" as UC4
+  usecase "Payer pour un cours" as UC5
+  usecase "Suivre un cours" as UC6
+  usecase "Soumettre un travail" as UC7
+  usecase "Consulter sa progression" as UC8
+  
+  usecase "Créer un cours" as UC9
+  usecase "Modifier un cours" as UC10
+  usecase "Ajouter des ressources" as UC11
+  usecase "Évaluer les travaux" as UC12
+  usecase "Consulter les statistiques" as UC13
+  
+  usecase "Gérer les utilisateurs" as UC14
+  usecase "Gérer les cours" as UC15
+  usecase "Gérer les paiements" as UC16
+  usecase "Gérer les autorisations" as UC17
+}
+
+Student --> UC1
+Student --> UC2
+Student --> UC3
+Student --> UC4
+Student --> UC5
+Student --> UC6
+Student --> UC7
+Student --> UC8
+
+Instructor --> UC2
+Instructor --> UC9
+Instructor --> UC10
+Instructor --> UC11
+Instructor --> UC12
+Instructor --> UC13
+
+Admin --> UC2
+Admin --> UC14
+Admin --> UC15
+Admin --> UC16
+Admin --> UC17
+
+@enduml 
