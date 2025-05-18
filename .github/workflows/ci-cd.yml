@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  test-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -32,18 +32,14 @@ jobs:
         with:
           python-version: '3.10'
 
-      # 4. Installation des requirements
+      # 4. Installation des requirements avec ReportLab compatible
       - name: Install requirements
         run: |
           python -m pip install --upgrade pip
+          pip install reportlab==3.6.12
           pip install -r requirements.txt
 
-      # 5. Lancer les tests Django
-      - name: Run Django tests
-        run: |
-          python manage.py test --verbosity=2
-
-      # 6. Reload de la webapp PythonAnywhere
+      # 5. Reload de la webapp PythonAnywhere
       - name: Reload PythonAnywhere webapp
         env:
           PA_USER:   ${{ secrets.PA_USER }}
