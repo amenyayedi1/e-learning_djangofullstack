@@ -1,4 +1,4 @@
-# fichier : .github/workflows/deploy-to-pythonanywhere.yml
+# .github/workflows/deploy-to-pythonanywhere.yml
 name: CI/CD Django → PythonAnywhere
 
 on:
@@ -13,24 +13,29 @@ jobs:
         working-directory: eduplus-dev
 
     steps:
-      # 1) Récupérer le code
+      # 1) Checkout du code
       - name: Checkout
         uses: actions/checkout@v3
 
-      # 2) Installer Python et vos déps
-      - name: Setup Python & install requirements
+      # 2) Installer les libs système pour pycairo
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcairo2-dev pkg-config python3-dev
+
+      # 3) Setup Python + pip install local pour valider la build
+      - name: Setup Python & install requirements locally
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
-      - name: Install requirements
+      - name: Install Python requirements
         run: |
           python -m pip install --upgrade pip
-          # forcer reportlab compatible xhtml2pdf
-          pip install reportlab==3.6.12
+          pip install reportlab==3.6.12    # lock ReportLab compatible
           pip install -r requirements.txt
 
-      # 3) Déployer sur PythonAnywhere
-      - name: Deploy & migrate & collectstatic & reload
+      # 4) Déployer sur PythonAnywhere
+      - name: Deploy → PythonAnywhere (migrate, collectstatic, reload)
         uses: umuttopalak/pythonanywhere-deploy-action@v1.1.2
         with:
           host:        'www.pythonanywhere.com'
