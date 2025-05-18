@@ -1,0 +1,647 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ course.title }} | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .course-header {
+        background-color: var(--dark-color);
+        color: white;
+        padding: 3rem 0;
+    }
+    
+    .instructor-badge {
+        display: inline-flex;
+        align-items: center;
+        background-color: rgba(255, 255, 255, 0.1);
+        padding: 6px 12px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+    }
+    
+    .instructor-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
+    
+    .course-stats {
+        display: flex;
+        gap: 2rem;
+        margin: 1rem 0;
+    }
+    
+    .course-stats .stat {
+        display: flex;
+        align-items: center;
+    }
+    
+    .course-stats .stat i {
+        margin-right: 0.5rem;
+    }
+    
+    .course-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        position: sticky;
+        top: 90px;
+    }
+    
+    .module-list {
+        list-style: none;
+        padding-left: 0;
+    }
+    
+    .module-item {
+        border-left: 2px solid #e9ecef;
+        padding-left: 1.5rem;
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    
+    .module-item:before {
+        content: '';
+        position: absolute;
+        left: -5px;
+        top: 0;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: var(--primary-color);
+    }
+    
+    .content-item {
+        padding: 0.75rem 1rem;
+        margin-top: 0.75rem;
+        background-color: #f8f9fa;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .content-icon {
+        margin-right: 0.75rem;
+        color: var(--gray-color);
+    }
+    
+    .free-badge {
+        margin-left: auto;
+        font-size: 0.75rem;
+        color: var(--success-color);
+    }
+    
+    .tab-content {
+        background-color: white;
+        border-radius: 0 0 8px 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .review {
+        border-bottom: 1px solid #e9ecef;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .review:last-child {
+        border-bottom: none;
+    }
+    
+    .rating {
+        color: #ffc107;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête du cours -->
+<section class="course-header">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <span class="badge bg-primary mb-2">{{ course.category.name }}</span>
+                <h1 class="mb-3">{{ course.title }}</h1>
+                
+                <div class="instructor-badge mb-3">
+                    <img class="instructor-avatar" 
+                         src="{% if course.instructor.profile_picture %}{{ course.instructor.profile_picture.url }}{% else %}{% static 'img/default-user.png' %}{% endif %}" 
+                         alt="{{ course.instructor.get_full_name }}">
+                    <span>{{ course.instructor.get_full_name }}</span>
+                </div>
+                
+                <div class="course-stats">
+                    <div class="stat">
+                        <i class="fas fa-users"></i>
+                        <span>{{ course.student_count }} étudiants</span>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-star text-warning"></i>
+                        <span>{{ course.average_rating|default:"0" }} ({{ course.reviews.count }} avis)</span>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-layer-group"></i>
+                        <span>{{ course.modules.count }} modules</span>
+                    </div>
+                    <div class="stat">
+                        <i class="fas fa-signal"></i>
+                        <span>{{ course.get_difficulty_level_display }}</span>
+                    </div>
+                </div>
+                
+                <p class="lead">{{ course.overview }}</p>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="course-card">
+                    {% if course.image %}
+                        <img src="{{ course.image.url }}" class="img-fluid rounded mb-3" alt="{{ course.title }}">
+                    {% else %}
+                        <img src="{% static 'img/course-placeholder.jpg' %}" class="img-fluid rounded mb-3" alt="{{ course.title }}">
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            {% if course.discount_price %}
+                                <span class="text-decoration-line-through text-muted me-1">{{ course.price }} €</span>
+                                <span class="fs-3 fw-bold text-primary">{{ course.discount_price }} €</span>
+                            {% elif course.price == 0 %}
+                                <span class="fs-3 fw-bold text-success">Gratuit</span>
+                            {% else %}
+                                <span class="fs-3 fw-bold text-primary">{{ course.price }} €</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if course.discount_price %}
+                            <span class="badge bg-danger">-{{ course.discount_percentage }}%</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if is_enrolled %}
+                        <a href="{% url 'dashboard:course_progress' course.slug %}" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-play-circle me-1"></i> Continuer l'apprentissage
+                        </a>
+                    {% else %}
+                        {% if course.price == 0 %}
+                            <form method="post" action="{% url 'courses:course_enroll' course.slug %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success w-100 mb-2">
+                                    <i class="fas fa-graduation-cap me-1"></i> S'inscrire gratuitement
+                                </button>
+                            </form>
+                        {% else %}
+                            <a href="{% url 'payments:checkout' course.id %}" class="btn btn-primary w-100 mb-2">
+                                <i class="fas fa-shopping-cart me-1"></i> Acheter maintenant
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                    
+                    <div class="d-grid gap-2 mt-3">
+                        <a href="#" class="btn btn-outline-secondary btn-sm">
+                            <i class="far fa-heart me-1"></i> Ajouter aux favoris
+                        </a>
+                        <a href="#" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-share-alt me-1"></i> Partager
+                        </a>
+                    </div>
+                    
+                    <hr>
+                    
+                    <h5>Ce cours inclut :</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-video me-2 text-muted"></i> {{ course.contents.filter.count }} vidéos</li>
+                        <li><i class="fas fa-file-alt me-2 text-muted"></i> {{ course.assignments.count }} exercices pratiques</li>
+                        <li><i class="fas fa-certificate me-2 text-muted"></i> Certificat d'achèvement</li>
+                        <li><i class="fas fa-infinity me-2 text-muted"></i> Accès à vie</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Contenu du cours -->
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Navigation par onglets -->
+                <ul class="nav nav-tabs" id="courseTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="content-tab" data-bs-toggle="tab" data-bs-target="#content" type="button" role="tab" aria-controls="content" aria-selected="true">Contenu du cours</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab" aria-controls="overview" aria-selected="false">À propos</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="instructor-tab" data-bs-toggle="tab" data-bs-target="#instructor" type="button" role="tab" aria-controls="instructor" aria-selected="false">Instructeur</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="false">Avis ({{ course.reviews.count }})</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="courseTabContent">
+                    <!-- Onglet Contenu -->
+                    <div class="tab-pane fade show active" id="content" role="tabpanel" aria-labelledby="content-tab">
+                        <h3 class="mb-4">Programme du cours</h3>
+                        
+                        <div class="accordion" id="moduleAccordion">
+                            {% for module in course.modules.all %}
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header" id="heading{{ module.id }}">
+                                        <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ module.id }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}" aria-controls="collapse{{ module.id }}">
+                                            Module {{ forloop.counter }}: {{ module.title }}
+                                        </button>
+                                    </h2>
+                                    <div id="collapse{{ module.id }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" aria-labelledby="heading{{ module.id }}" data-bs-parent="#moduleAccordion">
+                                        <div class="accordion-body">
+                                            <p>{{ module.description }}</p>
+                                            
+                                            {% if module.contents.exists %}
+                                                <ul class="list-group">
+                                                    {% for content in module.contents.all %}
+                                                        <li class="list-group-item d-flex align-items-center">
+                                                            {% if content.content_type == 'video' %}
+                                                                <i class="fas fa-play-circle me-3 text-primary"></i>
+                                                            {% elif content.content_type == 'text' %}
+                                                                <i class="fas fa-file-alt me-3 text-info"></i>
+                                                            {% elif content.content_type == 'file' %}
+                                                                <i class="fas fa-file-download me-3 text-warning"></i>
+                                                            {% elif content.content_type == 'image' %}
+                                                                <i class="fas fa-image me-3 text-success"></i>
+                                                            {% else %}
+                                                                <i class="fas fa-link me-3 text-secondary"></i>
+                                                            {% endif %}
+                                                            
+                                                            <div>
+                                                                <h6 class="mb-0">{{ content.title }}</h6>
+                                                                {% if content.is_free %}
+                                                                    <small class="text-success">Aperçu gratuit</small>
+                                                                {% endif %}
+                                                            </div>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endif %}
+                                            
+                                            {% if module.assignments.exists %}
+                                                <h6 class="mt-3 mb-2">Devoirs</h6>
+                                                <ul class="list-group">
+                                                    {% for assignment in module.assignments.all %}
+                                                        <li class="list-group-item d-flex align-items-center">
+                                                            <i class="fas fa-clipboard-check me-3 text-primary"></i>
+                                                            <div>
+                                                                <h6 class="mb-0">{{ assignment.title }}</h6>
+                                                                <small>Points: {{ assignment.max_score }}</small>
+                                                            </div>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Onglet À propos -->
+                    <div class="tab-pane fade" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                        <h3 class="mb-4">À propos de ce cours</h3>
+                        
+                        <div class="mb-4">
+                            <h5>Description</h5>
+                            <p>{{ course.overview }}</p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h5>Ce que vous apprendrez</h5>
+                            <ul class="list-group list-group-flush">
+                                {% for objective in course.objectives.splitlines %}
+                                    {% if objective %}
+                                        <li class="list-group-item d-flex">
+                                            <i class="fas fa-check-circle me-2 text-success"></i>
+                                            {{ objective }}
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h5>Prérequis</h5>
+                            <ul class="list-group list-group-flush">
+                                {% for requirement in course.requirements.splitlines %}
+                                    {% if requirement %}
+                                        <li class="list-group-item d-flex">
+                                            <i class="fas fa-info-circle me-2 text-primary"></i>
+                                            {{ requirement }}
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h5>Informations supplémentaires</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-language me-2"></i> Langue: {{ course.language }}</li>
+                                        <li><i class="fas fa-calendar-alt me-2"></i> Dernière mise à jour: {{ course.updated_at|date:"d/m/Y" }}</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-signal me-2"></i> Niveau: {{ course.get_difficulty_level_display }}</li>
+                                        <li><i class="fas fa-users me-2"></i> Étudiants: {{ course.student_count }}</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Onglet Instructeur -->
+                    <div class="tab-pane fade" id="instructor" role="tabpanel" aria-labelledby="instructor-tab">
+                        <h3 class="mb-4">À propos de l'instructeur</h3>
+                        
+                        <div class="d-flex mb-4">
+                            <img src="{% if course.instructor.profile_picture %}{{ course.instructor.profile_picture.url }}{% else %}{% static 'img/default-user.png' %}{% endif %}" 
+                                 class="rounded-circle me-3" width="80" height="80" alt="{{ course.instructor.get_full_name }}">
+                            <div>
+                                <h4>{{ course.instructor.get_full_name }}</h4>
+                                <p class="text-muted">{{ course.instructor.expertise }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">{{ course.instructor.courses_taught.count }}</h5>
+                                        <p class="card-text">Cours</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card mb-3">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">{{ course.instructor.courses_taught.all|length }}</h5>
+                                        <p class="card-text">Étudiants</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h5>Biographie</h5>
+                            <p>{{ course.instructor.bio }}</p>
+                        </div>
+                        {% if instructor_courses %}
+                            <div>
+                                <h5>Autres cours de cet instructeur</h5>
+                                <div class="row row-cols-1 row-cols-md-2 g-4 mt-2">
+                                    {% for other_course in instructor_courses %}
+                                        {% if other_course != course %}
+                                            <div class="col">
+                                                <div class="card h-100">
+                                                    {% if other_course.image %}
+                                                        <img src="{{ other_course.image.url }}" class="card-img-top" height="120" alt="{{ other_course.title }}">
+                                                    {% else %}
+                                                        <img src="{% static 'img/course-placeholder.jpg' %}" class="card-img-top" height="120" alt="{{ other_course.title }}">
+                                                    {% endif %}
+                                                    <div class="card-body">
+                                                        <h6 class="card-title">{{ other_course.title }}</h6>
+                                                        <p class="card-text small">{{ other_course.overview|truncatechars:70 }}</p>
+                                                        <a href="{% url 'courses:course_detail' other_course.slug %}" class="btn btn-sm btn-outline-primary">Voir le cours</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Onglet Avis -->
+                    <div class="tab-pane fade" id="reviews" role="tabpanel" aria-labelledby="reviews-tab">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="mb-0">Avis des étudiants</h3>
+                            
+                            {% if is_enrolled and not has_reviewed %}
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                                    <i class="fas fa-edit me-1"></i> Laisser un avis
+                                </button>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-4">
+                            <div class="col-md-4 text-center">
+                                <h1 class="display-4">{{ course.average_rating|default:"0" }}</h1>
+                                <div class="rating">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= course.average_rating|default:0|floatformat:"0" %}
+                                            <i class="fas fa-star"></i>
+                                        {% elif forloop.counter <= course.average_rating|default:0|add:"0.5" %}
+                                            <i class="fas fa-star-half-alt"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <p class="text-muted">{{ course.reviews.count }} avis</p>
+                            </div>
+                            <div class="col-md-8">
+                                <div class="rating-bars">
+                                    {% for i in "54321" %}
+                                        <div class="d-flex align-items-center mb-2">
+                                            <div class="me-2">{{ i }} <i class="fas fa-star text-warning"></i></div>
+                                            <div class="progress flex-grow-1" style="height: 10px;">
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: {{ course.reviews.filter.count|default:0 }}%"></div>
+                                            </div>
+                                            <div class="ms-2">{{ course.reviews.filter.count|default:0 }}</div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <hr>
+                        
+                        {% if course.reviews.exists %}
+                            <div class="reviews">
+                                {% for review in course.reviews.all %}
+                                    <div class="review">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <img src="{% if review.student.profile_picture %}{{ review.student.profile_picture.url }}{% else %}{% static 'img/default-user.png' %}{% endif %}" 
+                                                     class="rounded-circle me-2" width="40" height="40" alt="{{ review.student.get_full_name }}">
+                                                <div>
+                                                    <h6 class="mb-0">{{ review.student.get_full_name }}</h6>
+                                                    <small class="text-muted">{{ review.created_at|date:"d/m/Y" }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="rating">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= review.rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <p>{{ review.comment }}</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center p-4">
+                                <i class="far fa-comment-dots fa-3x mb-3 text-muted"></i>
+                                <h5>Aucun avis pour le moment</h5>
+                                <p>Soyez le premier à donner votre avis sur ce cours.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Besoin d'aide ?</h5>
+                        <p>Une question sur ce cours ? Contactez l'instructeur ou notre équipe de support.</p>
+                        <div class="d-grid gap-2">
+                            <a href="#" class="btn btn-outline-primary">
+                                <i class="fas fa-envelope me-1"></i> Contacter l'instructeur
+                            </a>
+                            <a href="{% url 'contact' %}" class="btn btn-outline-secondary">
+                                <i class="fas fa-headset me-1"></i> Support
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if related_courses %}
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Cours similaires</h5>
+                            <div class="list-group list-group-flush">
+                                {% for related in related_courses %}
+                                    <a href="{% url 'courses:course_detail' related.slug %}" class="list-group-item list-group-item-action">
+                                        <div class="d-flex align-items-center">
+                                            {% if related.image %}
+                                                <img src="{{ related.image.url }}" class="rounded me-3" width="50" height="50" alt="{{ related.title }}">
+                                            {% else %}
+                                                <img src="{% static 'img/course-placeholder.jpg' %}" class="rounded me-3" width="50" height="50" alt="{{ related.title }}">
+                                            {% endif %}
+                                            <div>
+                                                <h6 class="mb-0">{{ related.title }}</h6>
+                                                <small class="text-muted">{{ related.price }} €</small>
+                                            </div>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal Avis -->
+{% if is_enrolled and not has_reviewed %}
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="reviewModalLabel">Donner votre avis sur ce cours</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'dashboard:leave_review' course.id %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3 text-center">
+                        <label class="form-label">Votre note</label>
+                        <div class="rating-input">
+                            <div class="rating-stars">
+                                <i class="far fa-star" data-value="1"></i>
+                                <i class="far fa-star" data-value="2"></i>
+                                <i class="far fa-star" data-value="3"></i>
+                                <i class="far fa-star" data-value="4"></i>
+                                <i class="far fa-star" data-value="5"></i>
+                            </div>
+                            <input type="hidden" name="rating" id="rating" value="5" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">Votre commentaire</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="4" required></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Soumettre</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Gestion du système de notation dans le modal
+        const ratingStars = document.querySelectorAll('.rating-stars .fa-star');
+        const ratingInput = document.getElementById('rating');
+        
+        if (ratingStars.length > 0 && ratingInput) {
+            ratingStars.forEach(star => {
+                star.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    ratingInput.value = value;
+                    
+                    // Mise à jour de l'affichage des étoiles
+                    ratingStars.forEach(s => {
+                        const starValue = s.getAttribute('data-value');
+                        if (starValue <= value) {
+                            s.classList.remove('far');
+                            s.classList.add('fas');
+                        } else {
+                            s.classList.remove('fas');
+                            s.classList.add('far');
+                        }
+                    });
+                });
+                
+                // Effet de survol
+                star.addEventListener('mouseenter', function() {
+                    const value = this.getAttribute('data-value');
+                    
+                    ratingStars.forEach(s => {
+                        const starValue = s.getAttribute('data-value');
+                        if (starValue <= value) {
+                            s.classList.add('text-warning');
+                        }
+                    });
+                });
+                
+                star.addEventListener('mouseleave', function() {
+                    ratingStars.forEach(s => {
+                        s.classList.remove('text-warning');
+                    });
+                });
+            });
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %} 

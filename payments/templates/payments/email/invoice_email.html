@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Votre facture EduPlus</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .header {
+            background-color: #4F46E5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .content {
+            padding: 20px;
+        }
+        .footer {
+            background-color: #f5f5f5;
+            padding: 15px;
+            text-align: center;
+            font-size: 0.8em;
+            color: #666;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4F46E5;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        .info-block {
+            background-color: #f9f9f9;
+            border-left: 4px solid #4F46E5;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Votre facture est disponible</h1>
+    </div>
+    
+    <div class="content">
+        <p>Bonjour {{ user.get_full_name|default:user.username }},</p>
+        
+        <p>Nous vous remercions pour votre achat sur EduPlus !</p>
+        
+        <p>Votre paiement pour le cours <strong>{{ course.title }}</strong> a été traité avec succès. Vous trouverez ci-joint votre facture (N° {{ invoice.invoice_number }}).</p>
+        
+        <div class="info-block">
+            <h3>Détails de votre achat :</h3>
+            <p><strong>Cours :</strong> {{ course.title }}</p>
+            <p><strong>Date du paiement :</strong> {{ payment.paid_at|date:"d/m/Y H:i" }}</p>
+            <p><strong>Montant :</strong> {{ invoice.total }} €</p>
+            <p><strong>Méthode de paiement :</strong> {{ payment.get_payment_method_display }}</p>
+        </div>
+        
+        <p>Vous pouvez dès maintenant accéder à votre cours et commencer votre apprentissage.</p>
+        
+        <a href="{{ site_url }}{% url 'courses:course_detail' course.slug %}" class="button">Accéder au cours</a>
+        
+        <p>Si vous avez des questions concernant votre achat ou votre facture, n'hésitez pas à contacter notre équipe de support.</p>
+        
+        <p>Nous vous souhaitons une excellente formation !</p>
+        
+        <p>Cordialement,<br>
+        L'équipe EduPlus</p>
+    </div>
+    
+    <div class="footer">
+        <p>© EduPlus, 123 Rue de la Formation, 75000 Paris</p>
+        <p>Cet email a été envoyé à {{ user.email }}</p>
+    </div>
+</body>
+</html> 

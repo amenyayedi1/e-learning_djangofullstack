@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Inscription | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary-color: #4F46E5;
+        --primary-rgb: 79, 70, 229;
+        --light-color: #f9fafb;
+        --gray-color: #6b7280;
+        --dark-color: #111827;
+    }
+
+    .auth-section {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(120deg, #f0f4f8, #e5e7eb);
+        padding: 4rem 0;
+    }
+
+    .auth-card {
+        background: white;
+        border-radius: 1rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        display: flex;
+        flex-direction: row;
+    }
+
+    .auth-image {
+        background: url('{% static "img/register-bg.jpg" %}') no-repeat center center;
+        background-size: cover;
+        flex: 1;
+        min-height: 450px;
+    }
+
+    .auth-content {
+        flex: 1;
+        padding: 3rem 2.5rem;
+    }
+
+    .auth-content h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--dark-color);
+        margin-bottom: 1rem;
+    }
+
+    .auth-content p {
+        color: var(--gray-color);
+        margin-bottom: 2rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: var(--dark-color);
+    }
+
+    .form-control {
+        padding: 0.75rem 1rem;
+        border-radius: 0.5rem;
+        border: 1px solid #d1d5db;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(var(--primary-rgb), 0.25);
+    }
+
+    .btn-auth {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        transition: background-color 0.3s;
+    }
+
+    .btn-auth:hover {
+        background-color: #4338ca;
+    }
+
+    .social-login {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .social-btn {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.2rem;
+        transition: transform 0.2s;
+    }
+
+    .social-btn:hover {
+        transform: scale(1.1);
+    }
+
+    .social-btn.google { background-color: #EA4335; }
+    .social-btn.facebook { background-color: #1877F2; }
+    .social-btn.twitter { background-color: #1DA1F2; }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 2rem 0;
+        color: var(--gray-color);
+    }
+
+    .divider::before,
+    .divider::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background-color: #e5e7eb;
+    }
+
+    .user-type-selector {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .user-type-selector .form-check {
+        flex: 1;
+        padding: 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 0.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .user-type-selector .form-check:hover,
+    .user-type-selector .form-check-input:checked + .form-check-label {
+        border-color: var(--primary-color);
+        background-color: rgba(var(--primary-rgb), 0.05);
+    }
+
+    .user-type-icon {
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+        color: var(--primary-color);
+    }
+
+    .password-requirements {
+        font-size: 0.85rem;
+        color: var(--gray-color);
+        margin-top: 0.5rem;
+    }
+
+    .auth-footer {
+        margin-top: 1.5rem;
+        text-align: center;
+    }
+
+    .auth-footer a {
+        color: var(--primary-color);
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    .auth-footer a:hover {
+        text-decoration: underline;
+    }
+
+    .alert {
+        border-radius: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .invalid-feedback {
+        font-size: 0.8rem;
+    }
+
+    @media (max-width: 768px) {
+        .auth-card {
+            flex-direction: column;
+        }
+
+        .auth-image {
+            height: 200px;
+        }
+
+        .auth-content {
+            padding: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<section class="auth-section">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card auth-card">
+                    <div class="row g-0">
+                        <div class="col-md-5 d-none d-md-block">
+                            <div class="auth-image"></div>
+                        </div>
+                        <div class="col-md-7">
+                            <div class="auth-content">
+                                <h1>Créer un compte</h1>
+                                <p class="text-muted">Rejoignez notre communauté d'apprentissage pour accéder à des milliers de cours.</p>
+                                
+                                {% if messages %}
+                                    {% for message in messages %}
+                                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                            {{ message }}
+                                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger" role="alert">
+                                        {% for error in form.non_field_errors %}
+                                            <p class="mb-0">{{ error }}</p>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                
+                                <!-- Connexion avec réseaux sociaux -->
+                                <div class="social-login">
+                                    <a href="#" class="social-btn google">
+                                        <i class="fab fa-google"></i>
+                                    </a>
+                                    <a href="#" class="social-btn facebook">
+                                        <i class="fab fa-facebook-f"></i>
+                                    </a>
+                                    <a href="#" class="social-btn twitter">
+                                        <i class="fab fa-twitter"></i>
+                                    </a>
+                                </div>
+                                
+                                <div class="divider">
+                                    <hr>
+                                    <span>ou</span>
+                                    <hr>
+                                </div>
+                                
+                                <!-- Formulaire d'inscription -->
+                                <form method="post" action="{% url 'users:register' %}">
+                                    {% csrf_token %}
+                                    
+                                    <!-- Sélecteur de type d'utilisateur -->
+<div class="user-type-selector">
+    <div class="form-check">
+        <div class="user-type-icon">
+            <i class="fas fa-user-graduate"></i>
+        </div>
+        <input class="form-check-input" type="radio" name="user_type" id="student" value="student" checked>
+        <label class="form-check-label" for="student">
+            Étudiant
+        </label>
+    </div>
+    <div class="form-check">
+        <div class="user-type-icon">
+            <i class="fas fa-chalkboard-teacher"></i>
+        </div>
+        <input class="form-check-input" type="radio" name="user_type" id="instructor" value="instructor">
+        <label class="form-check-label" for="instructor">
+            Instructeur
+        </label>
+    </div>
+    {% if form.user_type.errors %}
+        <div class="invalid-feedback d-block">
+            {% for error in form.user_type.errors %}
+                {{ error }}
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6 mb-3">
+                                            <label for="id_first_name" class="form-label">Prénom</label>
+                                            <input type="text" name="first_name" class="form-control {% if form.first_name.errors %}is-invalid{% endif %}" id="id_first_name" value="{{ form.first_name.value|default:'' }}" required>
+                                            {% if form.first_name.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.first_name.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6 mb-3">
+                                            <label for="id_last_name" class="form-label">Nom</label>
+                                            <input type="text" name="last_name" class="form-control {% if form.last_name.errors %}is-invalid{% endif %}" id="id_last_name" value="{{ form.last_name.value|default:'' }}" required>
+                                            {% if form.last_name.errors %}
+                                                <div class="invalid-feedback">
+                                                    {% for error in form.last_name.errors %}
+                                                        {{ error }}
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="id_email" class="form-label">Email</label>
+                                        <input type="email" name="email" class="form-control {% if form.email.errors %}is-invalid{% endif %}" id="id_email" value="{{ form.email.value|default:'' }}" required>
+                                        {% if form.email.errors %}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.email.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="id_password1" class="form-label">Mot de passe</label>
+                                        <input type="password" name="password1" class="form-control {% if form.password1.errors %}is-invalid{% endif %}" id="id_password1" required>
+                                        {% if form.password1.errors %}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.password1.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                        <div class="password-requirements">
+                                            <p class="mb-1">Le mot de passe doit :</p>
+                                            <ul class="ps-3 mb-0">
+                                                <li>Contenir au moins 8 caractères</li>
+                                                <li>Ne pas être trop commun</li>
+                                                <li>Contenir au moins un chiffre</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="id_password2" class="form-label">Confirmer le mot de passe</label>
+                                        <input type="password" name="password2" class="form-control {% if form.password2.errors %}is-invalid{% endif %}" id="id_password2" required>
+                                        {% if form.password2.errors %}
+                                            <div class="invalid-feedback">
+                                                {% for error in form.password2.errors %}
+                                                    {{ error }}
+                                                {% endfor %}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="mb-4 form-check">
+                                        <input type="checkbox" class="form-check-input" id="terms" name="terms" required>
+                                        <label class="form-check-label" for="terms">
+                                            J'accepte les <a href="#" target="_blank">conditions d'utilisation</a> et la <a href="#" target="_blank">politique de confidentialité</a>
+                                        </label>
+                                    </div>
+                                    
+                                    <input type="hidden" name="next" value="{{ next }}">
+                                    
+                                    <button type="submit" class="btn btn-primary btn-auth w-100">
+                                        <i class="fas fa-user-plus me-2"></i> Créer mon compte
+                                    </button>
+                                </form>
+                                
+                                <div class="auth-footer">
+                                    <p>Déjà un compte? <a href="{% url 'users:login' %}">Se connecter</a></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userTypeRadios = document.querySelectorAll('input[name="user_type"]');
+        const userTypeContainers = document.querySelectorAll('.user-type-selector .form-check');
+        
+        userTypeRadios.forEach((radio, index) => {
+            radio.addEventListener('change', function() {
+                userTypeContainers.forEach(container => {
+                    container.style.borderColor = '#e9ecef';
+                    container.style.backgroundColor = 'transparent';
+                });
+                
+                if (this.checked) {
+                    userTypeContainers[index].style.borderColor = 'var(--primary-color)';
+                    userTypeContainers[index].style.backgroundColor = 'rgba(var(--primary-rgb), 0.05)';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

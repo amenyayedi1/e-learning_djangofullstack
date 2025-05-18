@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}EduPlus - Plateforme d'apprentissage en ligne{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="mb-4">Apprenez à votre rythme, où que vous soyez</h1>
+                <p class="lead mb-4">EduPlus vous offre un accès à des formations de qualité, créées par des experts, disponibles 24/7.</p>
+                <div class="d-flex">
+                    <a href="/courses/" class="btn btn-light btn-lg me-3">Explorer les cours</a>
+                    <a href="{% url 'users:register' %}" class="btn btn-outline-light btn-lg">S'inscrire</a>
+                </div>
+            </div>
+            <div class="col-lg-6 d-none d-lg-block">
+                <img src="{% static 'img/hero-image.svg' %}" alt="Education illustration" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Pourquoi choisir EduPlus ?</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-4">
+                            <i class="fas fa-laptop-code fa-3x text-primary"></i>
+                        </div>
+                        <h4>Cours de qualité</h4>
+                        <p class="text-muted">Accédez à des cours conçus par des experts et régulièrement mis à jour.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-4">
+                            <i class="fas fa-clock fa-3x text-primary"></i>
+                        </div>
+                        <h4>Apprentissage flexible</h4>
+                        <p class="text-muted">Étudiez à votre rythme, quand vous le souhaitez, sur n'importe quel appareil.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center p-4">
+                        <div class="mb-4">
+                            <i class="fas fa-certificate fa-3x text-primary"></i>
+                        </div>
+                        <h4>Certificats reconnus</h4>
+                        <p class="text-muted">Obtenez des certificats pour valoriser vos nouvelles compétences.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Courses Section (version temporaire) -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Nos cours populaires</h2>
+        <div class="row">
+            <!-- Cours 1 -->
+            <div class="col-md-4 mb-4">
+                <div class="card course-card h-100">
+                    <span class="badge bg-primary">Populaire</span>
+                    <img src="data:image/jpeg;base64,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" class="card-img-top" alt="Python">
+                    <div class="card-body">
+                        <h5 class="card-title">Introduction à Python</h5>
+                        <p class="card-text">Apprenez les bases de la programmation Python de zéro.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-primary fw-bold">49,99 €</span>
+                            <a href="#" class="btn btn-sm btn-outline-primary">En savoir plus</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Cours 2 -->
+            <div class="col-md-4 mb-4">
+                <div class="card course-card h-100">
+                    <span class="badge bg-success">Nouveau</span>
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRBFFXaEuP8ZBYIb85VLUSnULoekHehFceilQ&s" class="card-img-top" alt="Web Design">
+                    <div class="card-body">
+                        <h5 class="card-title">Web Design Responsive</h5>
+                        <p class="card-text">Créez des sites web modernes qui s'adaptent à tous les écrans.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-primary fw-bold">59,99 €</span>
+                            <a href="#" class="btn btn-sm btn-outline-primary">En savoir plus</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Cours 3 -->
+            <div class="col-md-4 mb-4">
+                <div class="card course-card h-100">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS2T8QYRNJMEGqZLfBWL-_nQ1tec8vAjDZ1Qg&s" class="card-img-top" alt="Marketing Digital">
+                    <div class="card-body">
+                        <h5 class="card-title">Marketing Digital</h5>
+                        <p class="card-text">Maîtrisez les stratégies de marketing en ligne pour développer votre activité.</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="text-primary fw-bold">39,99 €</span>
+                            <a href="#" class="btn btn-sm btn-outline-primary">En savoir plus</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-4">
+            <a href="/courses/" class="btn btn-primary">Voir tous les cours</a>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-8 mx-auto text-center">
+                <h2 class="mb-3">Prêt à commencer votre apprentissage ?</h2>
+                <p class="lead mb-4">Rejoignez des milliers d'étudiants qui apprennent déjà sur EduPlus.</p>
+                <a href="{% url 'users:register' %}" class="btn btn-primary btn-lg">S'inscrire gratuitement</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 

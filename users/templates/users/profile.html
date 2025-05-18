@@ -1,0 +1,509 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Profil | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        background-color: var(--primary-color);
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    
+    .profile-card {
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+    
+    .profile-card .card-header {
+        background-color: white;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 1rem 1.5rem;
+    }
+    
+    .profile-card .card-body {
+        padding: 1.5rem;
+    }
+    
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 5px solid white;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .nav-pills .nav-link {
+        color: var(--dark-color);
+        border-radius: 5px;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .nav-pills .nav-link:hover {
+        background-color: rgba(var(--primary-rgb), 0.05);
+    }
+    
+    .nav-pills .nav-link.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .nav-pills .nav-link i {
+        margin-right: 0.75rem;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .form-label {
+        font-weight: 500;
+    }
+    
+    .bio-textarea {
+        min-height: 120px;
+    }
+    
+    .input-image-preview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        margin-bottom: 1rem;
+    }
+    
+    .social-inputs .input-group {
+        margin-bottom: 1rem;
+    }
+    
+    .social-inputs .input-group-text {
+        width: 45px;
+        justify-content: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- En-tête du profil -->
+<section class="profile-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="mb-2">Profil</h1>
+                <p class="lead mb-0">Gérer votre compte et vos préférences</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Menu de navigation -->
+        <div class="col-lg-3 mb-4">
+            <div class="profile-card mb-4">
+                <div class="card-body text-center">
+                    {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" class="profile-avatar mb-3">
+                    {% else %}
+                        <img src="{% static 'img/default-user.png' %}" alt="{{ user.get_full_name }}" class="profile-avatar mb-3">
+                    {% endif %}
+                    <h5>{{ user.get_full_name }}</h5>
+                    <p class="text-muted mb-0">{{ user.email }}</p>
+                    {% if user.is_instructor %}
+                        <span class="badge bg-primary mt-2">Instructeur</span>
+                    {% else %}
+                        <span class="badge bg-info mt-2">Étudiant</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="nav flex-column nav-pills" id="profile-tab" role="tablist" aria-orientation="vertical">
+                <a class="nav-link active" id="profile-info-tab" data-bs-toggle="pill" href="#profile-info" role="tab" aria-controls="profile-info" aria-selected="true">
+                    <i class="fas fa-user"></i> Informations personnelles
+                </a>
+                <a class="nav-link" id="credentials-tab" data-bs-toggle="pill" href="#credentials" role="tab" aria-controls="credentials" aria-selected="false">
+                    <i class="fas fa-lock"></i> Identifiants
+                </a>
+                <a class="nav-link" id="notifications-tab" data-bs-toggle="pill" href="#notifications" role="tab" aria-controls="notifications" aria-selected="false">
+                    <i class="fas fa-bell"></i> Notifications
+                </a>
+                <a class="nav-link" id="privacy-tab" data-bs-toggle="pill" href="#privacy" role="tab" aria-controls="privacy" aria-selected="false">
+                    <i class="fas fa-shield-alt"></i> Confidentialité
+                </a>
+                {% if user.is_instructor %}
+                <a class="nav-link" id="payout-tab" data-bs-toggle="pill" href="#payout" role="tab" aria-controls="payout" aria-selected="false">
+                    <i class="fas fa-money-bill-wave"></i> Paiements
+                </a>
+                {% endif %}
+                <a class="nav-link text-danger" href="{% url 'users:logout' %}">
+                    <i class="fas fa-sign-out-alt"></i> Déconnexion
+                </a>
+            </div>
+        </div>
+        
+        <!-- Contenu des onglets -->
+        <div class="col-lg-9">
+            <div class="tab-content" id="profile-tab-content">
+                <!-- Onglet Informations personnelles -->
+                <div class="tab-pane fade show active" id="profile-info" role="tabpanel" aria-labelledby="profile-info-tab">
+                    <div class="profile-card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Informations personnelles</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if messages %}
+                                {% for message in messages %}
+                                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                        {{ message }}
+                                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                            
+                            <form method="post" action="{% url 'users:profile_edit' %}" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                
+                                <div class="row mb-4">
+                                    <div class="col-md-4 text-center">
+                                        {% if user.profile_picture %}
+                                            <img src="{{ user.profile_picture.url }}" alt="{{ user.get_full_name }}" class="input-image-preview" id="profile-pic-preview">
+                                        {% else %}
+                                            <img src="{% static 'img/default-user.png' %}" alt="{{ user.get_full_name }}" class="input-image-preview" id="profile-pic-preview">
+                                        {% endif %}
+                                        <div class="mb-3">
+                                            <input type="file" class="form-control" id="id_profile_picture" name="profile_picture" accept="image/*">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div class="row">
+                                            <div class="col-md-6 mb-3">
+                                                <label for="id_first_name" class="form-label">Prénom</label>
+                                                <input type="text" class="form-control" id="id_first_name" name="first_name" value="{{ user.first_name }}" required>
+                                            </div>
+                                            <div class="col-md-6 mb-3">
+                                                <label for="id_last_name" class="form-label">Nom</label>
+                                                <input type="text" class="form-control" id="id_last_name" name="last_name" value="{{ user.last_name }}" required>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="id_email" class="form-label">Email</label>
+                                            <input type="email" class="form-control" id="id_email" value="{{ user.email }}" readonly>
+                                            <small class="text-muted">Pour changer votre email, veuillez contacter le support.</small>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label for="id_phone" class="form-label">Téléphone</label>
+                                            <input type="tel" class="form-control" id="id_phone" name="phone" value="{{ user.phone|default:'' }}">
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="id_bio" class="form-label">Biographie</label>
+                                    <textarea class="form-control bio-textarea" id="id_bio" name="bio" rows="4">{{ user.bio|default:'' }}</textarea>
+                                    <small class="text-muted">Partagez quelques informations sur vous-même pour que les autres utilisateurs puissent vous connaître.</small>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="id_location" class="form-label">Localisation</label>
+                                        <input type="text" class="form-control" id="id_location" name="location" value="{{ user.location|default:'' }}">
+                                    </div>
+                                    
+                                    {% if user.is_instructor %}
+                                    <div class="col-md-6 mb-3">
+                                        <label for="id_expertise" class="form-label">Expertise</label>
+                                        <input type="text" class="form-control" id="id_expertise" name="expertise" value="{{ user.expertise|default:'' }}">
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="social-inputs">
+                                    <label class="form-label">Réseaux sociaux</label>
+                                    
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fab fa-linkedin"></i></span>
+                                        <input type="url" class="form-control" id="id_linkedin" name="linkedin" placeholder="URL LinkedIn" value="{{ user.linkedin|default:'' }}">
+                                    </div>
+                                    
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fab fa-twitter"></i></span>
+                                        <input type="url" class="form-control" id="id_twitter" name="twitter" placeholder="URL Twitter" value="{{ user.twitter|default:'' }}">
+                                    </div>
+                                    
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-globe"></i></span>
+                                        <input type="url" class="form-control" id="id_website" name="website" placeholder="URL site web" value="{{ user.website|default:'' }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="text-end mt-4">
+                                    
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i> Enregistrer les modifications
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Onglet Identifiants -->
+                <div class="tab-pane fade" id="credentials" role="tabpanel" aria-labelledby="credentials-tab">
+                    <div class="profile-card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Modifier le mot de passe</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'users:change_password' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="id_old_password" class="form-label">Mot de passe actuel</label>
+                                    <input type="password" class="form-control" id="id_old_password" name="old_password" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="id_new_password1" class="form-label">Nouveau mot de passe</label>
+                                    <input type="password" class="form-control" id="id_new_password1" name="new_password1" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label for="id_new_password2" class="form-label">Confirmer le nouveau mot de passe</label>
+                                    <input type="password" class="form-control" id="id_new_password2" name="new_password2" required>
+                                </div>
+                                
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-key me-1"></i> Modifier le mot de passe
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Onglet Notifications -->
+                <div class="tab-pane fade" id="notifications" role="tabpanel" aria-labelledby="notifications-tab">
+                    <div class="profile-card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Préférences de notifications</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'users:notification_settings' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="email_course_updates" name="email_course_updates" {% if user.notification_settings.email_course_updates %}checked{% endif %}>
+                                        <label class="form-check-label" for="email_course_updates">Mises à jour des cours</label>
+                                    </div>
+                                    <small class="text-muted d-block mb-3">Recevoir des notifications par email lorsque les cours auxquels vous êtes inscrit sont mis à jour.</small>
+                                    
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="email_assignment_reminders" name="email_assignment_reminders" {% if user.notification_settings.email_assignment_reminders %}checked{% endif %}>
+                                        <label class="form-check-label" for="email_assignment_reminders">Rappels de devoirs</label>
+                                    </div>
+                                    <small class="text-muted d-block mb-3">Recevoir des rappels par email pour les devoirs à venir.</small>
+                                    
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="email_announcements" name="email_announcements" {% if user.notification_settings.email_announcements %}checked{% endif %}>
+                                        <label class="form-check-label" for="email_announcements">Annonces</label>
+                                    </div>
+                                    <small class="text-muted d-block mb-3">Recevoir des annonces importantes par email concernant la plateforme.</small>
+                                    
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="email_promotions" name="email_promotions" {% if user.notification_settings.email_promotions %}checked{% endif %}>
+                                        <label class="form-check-label" for="email_promotions">Promotions</label>
+                                    </div>
+                                    <small class="text-muted d-block mb-3">Recevoir des offres promotionnelles et des réductions par email.</small>
+                                </div>
+                                
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i> Enregistrer les préférences
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Onglet Confidentialité -->
+                <div class="tab-pane fade" id="privacy" role="tabpanel" aria-labelledby="privacy-tab">
+                    <div class="profile-card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Paramètres de confidentialité</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'users:privacy_settings' %}">
+                                {% csrf_token %}
+                                <div class="mb-4">
+                                    <h6>Visibilité du profil</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="profile_visibility" id="profile_public" value="public" {% if user.privacy_settings.profile_visibility == 'public' %}checked{% endif %}>
+                                        <label class="form-check-label" for="profile_public">
+                                            Public - Visible par tous les utilisateurs
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="profile_visibility" id="profile_registered" value="registered" {% if user.privacy_settings.profile_visibility == 'registered' %}checked{% endif %}>
+                                        <label class="form-check-label" for="profile_registered">
+                                            Restreint - Visible uniquement par les utilisateurs inscrits
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="profile_visibility" id="profile_private" value="private" {% if user.privacy_settings.profile_visibility == 'private' %}checked{% endif %}>
+                                        <label class="form-check-label" for="profile_private">
+                                            Privé - Visible uniquement par vous et les administrateurs
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>Informations visibles</h6>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="show_email" name="show_email" {% if user.privacy_settings.show_email %}checked{% endif %}>
+                                        <label class="form-check-label" for="show_email">
+                                            Afficher mon email sur mon profil public
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="show_courses" name="show_courses" {% if user.privacy_settings.show_courses %}checked{% endif %}>
+                                        <label class="form-check-label" for="show_courses">
+                                            Afficher mes cours sur mon profil public
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h6>Suppression du compte</h6>
+                                    <p class="text-muted">Si vous souhaitez supprimer votre compte, toutes vos données personnelles seront supprimées.</p>
+                                    <a href="{% url 'users:delete_account' %}" class="btn btn-outline-danger">
+                                        <i class="fas fa-user-times me-1"></i> Supprimer mon compte
+                                    </a>
+                                </div>
+                                
+                                <div class="text-end mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i> Enregistrer les paramètres
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Onglet Paiements (pour les instructeurs) -->
+                {% if user.is_instructor %}
+                <div class="tab-pane fade" id="payout" role="tabpanel" aria-labelledby="payout-tab">
+                    <div class="profile-card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Paramètres de paiement</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="post" action="{% url 'users:payout_settings' %}">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="payout_method" class="form-label">Méthode de paiement préférée</label>
+                                    <select class="form-select" id="payout_method" name="payout_method">
+                                        <option value="bank_transfer" {% if user.payout_settings.payout_method == 'bank_transfer' %}selected{% endif %}>Virement bancaire</option>
+                                        <option value="paypal" {% if user.payout_settings.payout_method == 'paypal' %}selected{% endif %}>PayPal</option>
+                                        <option value="stripe" {% if user.payout_settings.payout_method == 'stripe' %}selected{% endif %}>Stripe</option>
+                                    </select>
+                                </div>
+                                
+                                <div id="bank_transfer_details" class="mb-4 {% if user.payout_settings.payout_method != 'bank_transfer' %}d-none{% endif %}">
+                                    <div class="mb-3">
+                                        <label for="bank_name" class="form-label">Nom de la banque</label>
+                                        <input type="text" class="form-control" id="bank_name" name="bank_name" value="{{ user.payout_settings.bank_name|default:'' }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="account_number" class="form-label">Numéro de compte</label>
+                                        <input type="text" class="form-control" id="account_number" name="account_number" value="{{ user.payout_settings.account_number|default:'' }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="swift_code" class="form-label">Code SWIFT/BIC</label>
+                                        <input type="text" class="form-control" id="swift_code" name="swift_code" value="{{ user.payout_settings.swift_code|default:'' }}">
+                                    </div>
+                                </div>
+                                
+                                <div id="paypal_details" class="mb-4 {% if user.payout_settings.payout_method != 'paypal' %}d-none{% endif %}">
+                                    <div class="mb-3">
+                                        <label for="paypal_email" class="form-label">Email PayPal</label>
+                                        <input type="email" class="form-control" id="paypal_email" name="paypal_email" value="{{ user.payout_settings.paypal_email|default:'' }}">
+                                    </div>
+                                </div>
+                                
+                                <div id="stripe_details" class="mb-4 {% if user.payout_settings.payout_method != 'stripe' %}d-none{% endif %}">
+                                    <div class="mb-3">
+                                        <label for="stripe_account_id" class="form-label">ID du compte Stripe</label>
+                                        <input type="text" class="form-control" id="stripe_account_id" name="stripe_account_id" value="{{ user.payout_settings.stripe_account_id|default:'' }}">
+                                    </div>
+                                </div>
+                                
+                                <div class="text-end">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i> Enregistrer les paramètres
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Prévisualisation de l'image de profil
+        const profilePicInput = document.getElementById('id_profile_picture');
+        const profilePicPreview = document.getElementById('profile-pic-preview');
+        
+        if (profilePicInput && profilePicPreview) {
+            profilePicInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        profilePicPreview.src = e.target.result;
+                    }
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        }
+        
+        // Affichage des champs de méthode de paiement
+        const payoutMethodSelect = document.getElementById('payout_method');
+        const bankTransferDetails = document.getElementById('bank_transfer_details');
+        const paypalDetails = document.getElementById('paypal_details');
+        const stripeDetails = document.getElementById('stripe_details');
+        
+        if (payoutMethodSelect) {
+            payoutMethodSelect.addEventListener('change', function() {
+                // Masquer tous les détails
+                bankTransferDetails.classList.add('d-none');
+                paypalDetails.classList.add('d-none');
+                stripeDetails.classList.add('d-none');
+                
+                // Afficher les détails correspondants
+                if (this.value === 'bank_transfer') {
+                    bankTransferDetails.classList.remove('d-none');
+                } else if (this.value === 'paypal') {
+                    paypalDetails.classList.remove('d-none');
+                } else if (this.value === 'stripe') {
+                    stripeDetails.classList.remove('d-none');
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

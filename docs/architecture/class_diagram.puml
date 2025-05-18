@@ -1,0 +1,100 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class CustomUser {
+  +email: CharField
+  +username: CharField
+  +first_name: CharField
+  +last_name: CharField
+  +is_student: BooleanField
+  +is_instructor: BooleanField
+  +date_joined: DateTimeField
+  +profile_picture: ImageField
+  +bio: TextField
+}
+
+class Course {
+  +title: CharField
+  +slug: SlugField
+  +description: TextField
+  +instructor: ForeignKey(CustomUser)
+  +price: DecimalField
+  +created_at: DateTimeField
+  +updated_at: DateTimeField
+  +is_published: BooleanField
+  +thumbnail: ImageField
+}
+
+class Module {
+  +course: ForeignKey(Course)
+  +title: CharField
+  +description: TextField
+  +order: IntegerField
+}
+
+class Content {
+  +module: ForeignKey(Module)
+  +title: CharField
+  +description: TextField
+  +content_type: CharField
+  +file: FileField
+  +url: URLField
+  +created_at: DateTimeField
+  +order: IntegerField
+}
+
+class Assignment {
+  +course: ForeignKey(Course)
+  +title: CharField
+  +description: TextField
+  +due_date: DateTimeField
+  +created_at: DateTimeField
+  +max_score: IntegerField
+}
+
+class Submission {
+  +assignment: ForeignKey(Assignment)
+  +student: ForeignKey(CustomUser)
+  +file: FileField
+  +submitted_at: DateTimeField
+  +score: IntegerField
+  +feedback: TextField
+}
+
+class Enrollment {
+  +student: ForeignKey(CustomUser)
+  +course: ForeignKey(Course)
+  +enrolled_at: DateTimeField
+  +is_paid: BooleanField
+  +payment_id: CharField
+}
+
+class Payment {
+  +user: ForeignKey(CustomUser)
+  +enrollment: ForeignKey(Enrollment)
+  +amount: DecimalField
+  +payment_date: DateTimeField
+  +payment_id: CharField
+  +status: CharField
+}
+
+class Progress {
+  +student: ForeignKey(CustomUser)
+  +content: ForeignKey(Content)
+  +completed: BooleanField
+  +completed_at: DateTimeField
+}
+
+CustomUser "1" -- "many" Course : teaches >
+CustomUser "1" -- "many" Enrollment : has >
+Course "1" -- "many" Module : contains >
+Module "1" -- "many" Content : contains >
+Course "1" -- "many" Assignment : has >
+Assignment "1" -- "many" Submission : receives >
+Enrollment "1" -- "0..1" Payment : generates >
+CustomUser "1" -- "many" Submission : submits >
+CustomUser "1" -- "many" Progress : tracks >
+Content "1" -- "many" Progress : tracked in >
+Course "1" -- "many" Enrollment : has >
+
+@enduml 

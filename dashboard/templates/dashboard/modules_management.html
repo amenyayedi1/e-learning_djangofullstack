@@ -1,0 +1,283 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Modules du cours {{ course.title }} | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        padding: 20px 0;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .module-item {
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background-color: #fff;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    .module-item:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .module-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .module-title {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+    .module-desc {
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+    .module-info {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    .sidebar {
+        position: sticky;
+        top: 20px;
+        height: calc(100vh - 40px);
+        padding-right: 15px;
+        overflow-y: auto;
+    }
+    .sidebar .nav-link {
+        color: #333;
+        font-weight: 500;
+    }
+    .sidebar .nav-link:hover {
+        background-color: #f8f9fa;
+    }
+    .sidebar .nav-link.active {
+        background-color: #007bff;
+        color: white;
+    }
+    .module-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .sortable-placeholder {
+        border: 1px dashed #ced4da;
+        margin-bottom: 1rem;
+        height: 100px;
+        border-radius: 0.25rem;
+        background-color: #f8f9fa;
+    }
+    .drag-handle {
+        cursor: grab;
+    }
+    .drag-handle:active {
+        cursor: grabbing;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>Modules du cours: {{ course.title }}</h2>
+            <div>
+                <a href="{% url 'dashboard:course_detail' course.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour au cours
+                </a>
+                <a href="{% url 'dashboard:module_create' course.id %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Ajouter un module
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row">
+        <!-- Barre latérale -->
+        <div class="col-md-3">
+            <div class="sidebar">
+                <div class="list-group">
+                    <a href="{% url 'dashboard:index' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-speedometer2"></i> Tableau de bord
+                    </a>
+                    <a href="{% url 'dashboard:courses_management' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-book"></i> Tous les cours
+                    </a>
+                    <a href="{% url 'dashboard:course_detail' course.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-info-circle"></i> Détails du cours
+                    </a>
+                    <a href="{% url 'dashboard:modules_management' course.id %}" class="list-group-item list-group-item-action active">
+                        <i class="bi bi-grid-3x3-gap"></i> Modules
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="bi bi-people"></i> Étudiants inscrits
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <i class="bi bi-star"></i> Évaluations
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-md-9">
+            <!-- Statistiques du cours -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h4>Résumé des modules</h4>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ modules.count }}</h5>
+                                    <p class="card-text">Modules au total</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    {% with total_content=0 %}
+                                        {% for module in modules %}
+                                            {% with total_content=total_content|add:module.contents.count %}{% endwith %}
+                                        {% endfor %}
+                                        <h5 class="card-title">{{ total_content }}</h5>
+                                    {% endwith %}
+                                    <p class="card-text">Contenus au total</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card text-center">
+                                <div class="card-body">
+                                    <h5 class="card-title">{% if course.is_published %}Publié{% else %}Non publié{% endif %}</h5>
+                                    <p class="card-text">Statut du cours</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulaire d'ajout rapide -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-plus-circle"></i> Ajout rapide d'un module</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{% url 'dashboard:modules_management' course.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="add_module" value="1">
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Titre du module</label>
+                            <input type="text" class="form-control" id="title" name="title" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description (optionnelle)</label>
+                            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Ajouter le module</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Liste des modules -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Liste des modules</h5>
+                    {% if modules %}
+                    <button id="reorderBtn" class="btn btn-sm btn-outline-primary">Réorganiser</button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if modules %}
+                    <form id="reorderForm" method="post" action="{% url 'dashboard:modules_management' course.id %}" style="display: none;">
+                        {% csrf_token %}
+                        <input type="hidden" name="update_order" value="1">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Glissez-déposez les modules pour modifier leur ordre, puis cliquez sur "Enregistrer l'ordre".
+                        </div>
+                        <button type="submit" class="btn btn-primary mb-3">Enregistrer l'ordre</button>
+                        <button type="button" id="cancelReorderBtn" class="btn btn-outline-secondary mb-3">Annuler</button>
+                    </form>
+                    
+                    <div id="moduleList" class="{% if reordering %}sortable{% endif %}">
+                        {% for module in modules %}
+                        <div class="module-item" data-id="{{ module.id }}">
+                            <input type="hidden" name="module_id" value="{{ module.id }}" form="reorderForm">
+                            <div class="module-header">
+                                <h4 class="module-title">
+                                    {% if reordering %}
+                                    <i class="bi bi-grip-vertical me-2 drag-handle"></i>
+                                    {% endif %}
+                                    Module {{ forloop.counter }}: {{ module.title }}
+                                </h4>
+                                <div class="module-actions">
+                                    <a href="{% url 'dashboard:module_detail' module.id %}" class="btn btn-sm btn-outline-secondary">
+                                        <i class="bi bi-eye"></i> Voir
+                                    </a>
+                                    <a href="{% url 'dashboard:module_edit' module.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i> Modifier
+                                    </a>
+                                    <a href="{% url 'dashboard:module_delete' module.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i> Supprimer
+                                    </a>
+                                </div>
+                            </div>
+                            <p class="module-desc">{{ module.description|default:"Aucune description" }}</p>
+                            <div class="module-info">
+                                <span class="badge bg-primary">{{ module.contents.count }} contenu(s)</span>
+                                <span class="text-muted ms-2">Ordre: {{ module.order }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Aucun module n'a été créé pour ce cours.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Gestion du mode de réorganisation
+        $("#reorderBtn").click(function() {
+            $("#reorderForm").show();
+            $(this).hide();
+            $("#moduleList").addClass("sortable");
+            $(".module-item").prepend('<i class="bi bi-grip-vertical me-2 drag-handle"></i>');
+        });
+        
+        $("#cancelReorderBtn").click(function() {
+            $("#reorderForm").hide();
+            $("#reorderBtn").show();
+            $("#moduleList").removeClass("sortable");
+            $(".module-item .drag-handle").remove();
+        });
+        
+        // Activer le tri par glisser-déposer
+        $(".sortable").sortable({
+            placeholder: "sortable-placeholder",
+            handle: ".drag-handle",
+            update: function(event, ui) {
+                // Mettre à jour l'ordre dans le formulaire
+                $("#reorderForm").find("input[name='module_id']").remove();
+                $(".sortable .module-item").each(function() {
+                    var moduleId = $(this).data("id");
+                    $("#reorderForm").append('<input type="hidden" name="module_id" value="' + moduleId + '">');
+                });
+            }
+        });
+    });
+</script>
+{% endblock %} 

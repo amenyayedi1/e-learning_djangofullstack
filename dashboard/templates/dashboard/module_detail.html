@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Module: {{ module.title }} | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        padding: 20px 0;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .content-item {
+        border: 1px solid #dee2e6;
+        border-radius: 0.25rem;
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background-color: #fff;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    .content-item:hover {
+        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+    }
+    .content-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .content-title {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+    .content-info {
+        font-size: 0.875rem;
+        color: #6c757d;
+    }
+    .content-preview {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        border: 1px solid #dee2e6;
+    }
+    .sidebar {
+        position: sticky;
+        top: 20px;
+        height: calc(100vh - 40px);
+        padding-right: 15px;
+        overflow-y: auto;
+    }
+    .sidebar .nav-link {
+        color: #333;
+        font-weight: 500;
+    }
+    .sidebar .nav-link:hover {
+        background-color: #f8f9fa;
+    }
+    .sidebar .nav-link.active {
+        background-color: #007bff;
+        color: white;
+    }
+    .content-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    .sortable-placeholder {
+        border: 1px dashed #ced4da;
+        margin-bottom: 1rem;
+        height: 100px;
+        border-radius: 0.25rem;
+        background-color: #f8f9fa;
+    }
+    .drag-handle {
+        cursor: grab;
+    }
+    .drag-handle:active {
+        cursor: grabbing;
+    }
+    .content-type-badge {
+        text-transform: capitalize;
+    }
+    .preview-truncate {
+        max-height: 100px;
+        overflow: hidden;
+        position: relative;
+    }
+    .preview-truncate::after {
+        content: "...";
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        padding: 0 5px;
+        background-color: #f8f9fa;
+    }
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%; /* 16:9 */
+        height: 0;
+    }
+    .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>Module: {{ module.title }}</h2>
+            <div>
+                <a href="{% url 'dashboard:modules_management' course.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour aux modules
+                </a>
+                <a href="{% url 'dashboard:module_edit' module.id %}" class="btn btn-outline-primary">
+                    <i class="bi bi-pencil"></i> Modifier le module
+                </a>
+                <a href="{% url 'dashboard:content_create' module.id %}" class="btn btn-primary">
+                    <i class="bi bi-plus-lg"></i> Ajouter du contenu
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row">
+        <!-- Barre latérale -->
+        <div class="col-md-3">
+            <div class="sidebar">
+                <div class="list-group">
+                    <a href="{% url 'dashboard:index' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-speedometer2"></i> Tableau de bord
+                    </a>
+                    <a href="{% url 'dashboard:courses_management' %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-book"></i> Tous les cours
+                    </a>
+                    <a href="{% url 'dashboard:course_detail' course.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-info-circle"></i> Détails du cours
+                    </a>
+                    <a href="{% url 'dashboard:modules_management' course.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-grid-3x3-gap"></i> Modules
+                    </a>
+                    <a href="#" class="list-group-item list-group-item-action active">
+                        <i class="bi bi-file-text"></i> Contenu du module
+                    </a>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Détails du module</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Titre:</strong> {{ module.title }}</p>
+                        <p><strong>Description:</strong> {{ module.description|default:"Aucune description" }}</p>
+                        <p><strong>Position:</strong> {{ module.order }}</p>
+                        <p><strong>Contenus:</strong> {{ contents.count }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-md-9">
+            <!-- Détails du module -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">À propos du module</h4>
+                </div>
+                <div class="card-body">
+                    <h5>{{ module.title }}</h5>
+                    <p>{{ module.description|default:"Aucune description" }}</p>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <p><strong>Cours parent:</strong> {{ course.title }}</p>
+                            <p><strong>Position dans le cours:</strong> {{ module.order }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Nombres de contenus:</strong> {{ contents.count }}</p>
+                            <p><strong>Dernière modification:</strong> {{ module.updated_at|date:"d/m/Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Liste des contenus -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="bi bi-list-ul"></i> Contenu du module</h5>
+                    {% if contents %}
+                    <button id="reorderBtn" class="btn btn-sm btn-outline-primary">Réorganiser</button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if contents %}
+                    <div id="reorderSection" style="display: none;">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Glissez-déposez les contenus pour modifier leur ordre, puis cliquez sur "Enregistrer l'ordre".
+                        </div>
+                        <div class="mb-3">
+                            <button type="button" id="saveOrderBtn" class="btn btn-primary">Enregistrer l'ordre</button>
+                            <button type="button" id="cancelReorderBtn" class="btn btn-outline-secondary">Annuler</button>
+                        </div>
+                    </div>
+                    
+                    <div id="contentList" class="{% if reordering %}sortable{% endif %}">
+                        {% for content in contents %}
+                        <div class="content-item" data-id="{{ content.id }}">
+                            <div class="content-header">
+                                <h4 class="content-title">
+                                    {% if reordering %}
+                                    <i class="bi bi-grip-vertical me-2 drag-handle"></i>
+                                    {% endif %}
+                                    {{ content.title }}
+                                </h4>
+                                <div class="content-actions">
+                                    <a href="{% url 'dashboard:content_edit' content.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil"></i> Modifier
+                                    </a>
+                                    <a href="{% url 'dashboard:content_delete' content.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i> Supprimer
+                                    </a>
+                                </div>
+                            </div>
+                            <div class="content-info">
+                                <span class="badge {% if content.content_type == 'text' %}bg-success{% elif content.content_type == 'video' %}bg-danger{% elif content.content_type == 'file' %}bg-info{% else %}bg-secondary{% endif %} content-type-badge">
+                                    <i class="bi {% if content.content_type == 'text' %}bi-file-text{% elif content.content_type == 'video' %}bi-camera-video{% elif content.content_type == 'file' %}bi-file-earmark{% else %}bi-question-circle{% endif %}"></i>
+                                    {{ content.content_type }}
+                                </span>
+                                <span class="text-muted ms-2">Ordre: {{ content.order }}</span>
+                            </div>
+                            
+                            {% if content.content_type == 'text' and content.text %}
+                            <div class="content-preview mt-2 preview-truncate">
+                                {{ content.text|linebreaks|truncatewords:50 }}
+                            </div>
+                            {% elif content.content_type == 'video' and content.video_url %}
+                            <div class="content-preview mt-2">
+                                <div class="video-container">
+                                    {% if 'youtube.com' in content.video_url or 'youtu.be' in content.video_url %}
+                                    <iframe src="{{ content.video_url|youtube_embed_url }}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                    {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-camera-video"></i> 
+                                        <a href="{{ content.video_url }}" target="_blank">Voir la vidéo</a>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% elif content.content_type == 'file' and content.file %}
+                            <div class="content-preview mt-2">
+                                <div class="alert alert-info">
+                                    <i class="bi bi-file-earmark"></i> 
+                                    <a href="{{ content.file.url }}" target="_blank">Télécharger le fichier</a> 
+                                    ({{ content.file.name|filename }} - {{ content.file.size|filesizeformat }})
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> Aucun contenu n'a été ajouté à ce module.
+                        <a href="{% url 'dashboard:content_create' module.id %}" class="alert-link">Ajouter du contenu maintenant</a>.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Gestion du mode de réorganisation
+        $("#reorderBtn").click(function() {
+            $("#reorderSection").show();
+            $(this).hide();
+            $("#contentList").addClass("sortable");
+            $(".content-item").prepend('<i class="bi bi-grip-vertical me-2 drag-handle"></i>');
+        });
+        
+        $("#cancelReorderBtn").click(function() {
+            $("#reorderSection").hide();
+            $("#reorderBtn").show();
+            $("#contentList").removeClass("sortable");
+            $(".content-item .drag-handle").remove();
+        });
+        
+        // Activer le tri par glisser-déposer
+        $(".sortable").sortable({
+            placeholder: "sortable-placeholder",
+            handle: ".drag-handle"
+        });
+        
+        // Soumettre l'ordre mis à jour
+        $("#saveOrderBtn").click(function() {
+            var contentIds = [];
+            
+            // Collecter les IDs des contenus dans l'ordre actuel
+            $(".sortable .content-item").each(function() {
+                contentIds.push($(this).data("id"));
+            });
+            
+            // Envoyer la mise à jour via AJAX
+            $.ajax({
+                url: "{% url 'dashboard:update_content_order' module.id %}",
+                type: "POST",
+                data: {
+                    content_ids: contentIds,
+                    csrfmiddlewaretoken: "{{ csrf_token }}"
+                },
+                success: function(response) {
+                    if (response.status === "success") {
+                        // Recharger la page pour voir les changements
+                        location.reload();
+                    } else {
+                        alert("Une erreur est survenue: " + response.message);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert("Une erreur est survenue: " + error);
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

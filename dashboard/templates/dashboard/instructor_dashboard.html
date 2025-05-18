@@ -1,0 +1,525 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tableau de bord instructeur | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background-color: var(--primary-color);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+        width: 60px;
+        height: 60px;
+        line-height: 60px;
+        text-align: center;
+        border-radius: 50%;
+    }
+    
+    .course-card {
+        transition: transform 0.3s ease;
+    }
+    
+    .course-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .course-image {
+        height: 160px;
+        object-fit: cover;
+    }
+    
+    .course-stats {
+        display: flex;
+        gap: 1rem;
+        margin-top: 0.5rem;
+    }
+    
+    .course-stat {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+        color: var(--gray-color);
+    }
+    
+    .course-stat i {
+        margin-right: 0.25rem;
+    }
+    
+    .sidebar-nav {
+        position: sticky;
+        top: 90px;
+    }
+    
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: var(--dark-color);
+        text-decoration: none;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar-link:hover, .sidebar-link.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .sidebar-link i {
+        margin-right: 0.75rem;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .notification-badge {
+        margin-left: auto;
+        background-color: var(--danger-color);
+    }
+    
+    .sidebar-link:hover .notification-badge {
+        background-color: white;
+        color: var(--primary-color);
+    }
+    
+    .submission-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .submission-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+    
+    .submission-header {
+        padding: 1rem;
+        border-bottom: 1px solid #e9ecef;
+        background-color: #f8f9fa;
+    }
+    
+    .submission-body {
+        padding: 1rem;
+    }
+    
+    .submission-footer {
+        padding: 1rem;
+        border-top: 1px solid #e9ecef;
+        background-color: #f8f9fa;
+    }
+    
+    .revenue-chart {
+        height: 300px;
+        margin-bottom: 2rem;
+    }
+    
+    .review-card {
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .rating {
+        color: #ffc107;
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête du tableau de bord -->
+<section class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="mb-2">Bonjour, {{ user.first_name }} !</h1>
+                <p class="lead mb-0">Bienvenue sur votre tableau de bord d'instructeur</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'courses:course_create' %}" class="btn btn-light">
+                    <i class="fas fa-plus me-1"></i> Créer un cours
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Sidebar de navigation -->
+        <div class="col-lg-3 mb-4">
+            <div class="sidebar-nav">
+                <a href="{% url 'dashboard:instructor' %}" class="sidebar-link active">
+                    <i class="fas fa-home"></i> Tableau de bord
+                </a>
+                <a href="{% url 'dashboard:teaching_courses' %}" class="sidebar-link">
+                    <i class="fas fa-chalkboard"></i> Mes cours
+                </a>
+                <a href="{% url 'dashboard:pending_submissions' %}" class="sidebar-link">
+                    <i class="fas fa-tasks"></i> Devoirs à évaluer
+                    {% if pending_submissions_count > 0 %}
+                    <span class="badge rounded-pill notification-badge">{{ pending_submissions_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-chart-line"></i> Statistiques
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-comments"></i> Commentaires
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-money-bill-wave"></i> Revenus
+                </a>
+                <a href="{% url 'users:profile' %}" class="sidebar-link">
+                    <i class="fas fa-user-cog"></i> Profil
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-bell"></i> Notifications
+                    {% if notifications_count > 0 %}
+                    <span class="badge rounded-pill notification-badge">{{ notifications_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="#" class="sidebar-link">
+                    <i class="fas fa-question-circle"></i> Aide
+                </a>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-lg-9">
+            <!-- Statistiques -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary-light text-primary">
+                        <i class="fas fa-chalkboard"></i>
+                    </div>
+                    <h5>{{ courses_count }}</h5>
+                    <p class="text-muted mb-0">Cours créés</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bg-success-light text-success">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h5>{{ students_count }}</h5>
+                    <p class="text-muted mb-0">Étudiants inscrits</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bg-info-light text-info">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h5>{{ average_rating|default:"N/A" }}</h5>
+                    <p class="text-muted mb-0">Note moyenne</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning-light text-warning">
+                        <i class="fas fa-euro-sign"></i>
+                    </div>
+                    <h5>{{ total_revenue|default:"0" }} €</h5>
+                    <p class="text-muted mb-0">Revenus totaux</p>
+                </div>
+            </div>
+            
+            <!-- Graphique des revenus -->
+            <div class="card mb-4">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Revenus mensuels</h5>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Cours récents -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Mes cours récents</h5>
+                            <a href="{% url 'dashboard:teaching_courses' %}" class="btn btn-sm btn-outline-primary">Voir tous</a>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_courses %}
+                                <div class="list-group list-group-flush">
+                                    {% for course in recent_courses %}
+                                        <a href="{% url 'courses:course_detail' course.slug %}" class="list-group-item list-group-item-action">
+                                            <div class="d-flex align-items-center">
+                                                {% if course.image %}
+                                                    <img src="{{ course.image.url }}" class="rounded me-3" width="60" height="60" alt="{{ course.title }}">
+                                                {% else %}
+                                                    <img src="{% static 'img/course-placeholder.jpg' %}" class="rounded me-3" width="60" height="60" alt="{{ course.title }}">
+                                                {% endif %}
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-0">{{ course.title }}</h6>
+                                                    <div class="course-stats">
+                                                        <div class="course-stat">
+                                                            <i class="fas fa-users"></i> {{ course.student_count }}
+                                                        </div>
+                                                        <div class="course-stat">
+                                                            <i class="fas fa-star text-warning"></i> {{ course.average_rating|default:"N/A" }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <span class="badge {% if course.is_published %}bg-success{% else %}bg-warning{% endif %}">
+                                                    {% if course.is_published %}Publié{% else %}Brouillon{% endif %}
+                                                </span>
+                                            </div>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-chalkboard fa-3x text-muted mb-3"></i>
+                                    <h5>Aucun cours créé</h5>
+                                    <p>Vous n'avez pas encore créé de cours.</p>
+                                    <a href="{% url 'courses:course_create' %}" class="btn btn-primary mt-2">Créer un cours</a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Devoirs récents à évaluer -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Devoirs récents à évaluer</h5>
+                            <a href="{% url 'dashboard:pending_submissions' %}" class="btn btn-sm btn-outline-primary">Voir tous</a>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_submissions %}
+                                {% for submission in recent_submissions %}
+                                    <div class="submission-card">
+                                        <div class="submission-header d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <h6 class="mb-0">{{ submission.assignment.title }}</h6>
+                                                <small class="text-muted">{{ submission.course.title }}</small>
+                                            </div>
+                                            <span class="badge bg-warning">Non évalué</span>
+                                        </div>
+                                        <div class="submission-body">
+                                            <div class="d-flex align-items-center">
+                                                <img src="{% if submission.student.profile_picture %}{{ submission.student.profile_picture.url }}{% else %}{% static 'img/default-user.png' %}{% endif %}" 
+                                                     class="rounded-circle me-2" width="40" height="40" alt="{{ submission.student.get_full_name }}">
+                                                <div>
+                                                    <h6 class="mb-0">{{ submission.student.get_full_name }}</h6>
+                                                    <small class="text-muted">Soumis le {{ submission.submission_date|date:"d/m/Y H:i" }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="submission-footer">
+                                            <a href="#" class="btn btn-sm btn-primary">Évaluer</a>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-clipboard-check fa-3x text-muted mb-3"></i>
+                                    <h5>Aucun devoir à évaluer</h5>
+                                    <p>Tous les devoirs soumis ont été évalués.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Commentaires récents -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Avis récents</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_reviews %}
+                                {% for review in recent_reviews %}
+                                    <div class="review-card">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <img src="{% if review.student.profile_picture %}{{ review.student.profile_picture.url }}{% else %}{% static 'img/default-user.png' %}{% endif %}" 
+                                                     class="rounded-circle me-2" width="40" height="40" alt="{{ review.student.get_full_name }}">
+                                                <div>
+                                                    <h6 class="mb-0">{{ review.student.get_full_name }}</h6>
+                                                    <small class="text-muted">{{ review.created_at|date:"d/m/Y" }}</small>
+                                                </div>
+                                            </div>
+                                            <div class="rating">
+                                                {% for i in "12345" %}
+                                                    {% if forloop.counter <= review.rating %}
+                                                        <i class="fas fa-star"></i>
+                                                    {% else %}
+                                                        <i class="far fa-star"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <p class="mb-1">{{ review.comment }}</p>
+                                        <small class="text-muted">{{ review.course.title }}</small>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                                    <h5>Aucun avis</h5>
+                                    <p>Vos cours n'ont pas encore reçu d'avis.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Messages récents des étudiants -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Messages récents</h5>
+                            <a href="#" class="btn btn-sm btn-outline-primary">Boîte de réception</a>
+                        </div>
+                        <div class="card-body">
+                            {% if recent_messages %}
+                                <div class="list-group list-group-flush">
+                                    {% for message in recent_messages %}
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                            <div class="d-flex align-items-center mb-1">
+                                                <img src="{% if message.sender.profile_picture %}{{ message.sender.profile_picture.url }}{% else %}{% static 'img/default-user.png' %}{% endif %}" 
+                                                     class="rounded-circle me-2" width="40" height="40" alt="{{ message.sender.get_full_name }}">
+                                                <div class="flex-grow-1">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <h6 class="mb-0">{{ message.sender.get_full_name }}</h6>
+                                                        <small class="text-muted">{{ message.created_at|date:"d/m/Y H:i" }}</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <p class="mb-0 text-truncate">{{ message.content }}</p>
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <h5>Aucun message</h5>
+                                    <p>Vous n'avez pas de nouveaux messages.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Conseils pour les instructeurs -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Conseils pour les instructeurs</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <div class="text-center">
+                                <i class="fas fa-video fa-3x text-primary mb-3"></i>
+                                <h5>Créez des vidéos de qualité</h5>
+                                <p class="mb-0">Utilisez un bon éclairage et un microphone de qualité pour vos vidéos de cours.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <div class="text-center">
+                                <i class="fas fa-clipboard-list fa-3x text-primary mb-3"></i>
+                                <h5>Structurez votre contenu</h5>
+                                <p class="mb-0">Organisez votre cours en modules et leçons pour faciliter l'apprentissage.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <i class="fas fa-comment-dots fa-3x text-primary mb-3"></i>
+                                <h5>Engagez vos étudiants</h5>
+                                <p class="mb-0">Répondez aux questions et encouragez les discussions sur votre cours.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Graphique des revenus
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        
+        // Données factices pour le graphique
+        const revenueData = {
+            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'],
+            datasets: [{
+                label: 'Revenus mensuels (€)',
+                data: [500, 700, 1000, 1200, 1500, 1800, 2000, 2200, 2400, 2600, 2800, 3000],
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                tension: 0.4
+            }]
+        };
+        
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'line',
+            data: revenueData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + ' €';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %} 

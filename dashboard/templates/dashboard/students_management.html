@@ -1,0 +1,528 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Gestion des Étudiants | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background-color: var(--primary-color);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    
+    .stat-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+        width: 60px;
+        height: 60px;
+        line-height: 60px;
+        text-align: center;
+        border-radius: 50%;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    
+    .sidebar-nav {
+        position: sticky;
+        top: 90px;
+    }
+    
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: var(--dark-color);
+        text-decoration: none;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar-link:hover, .sidebar-link.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .sidebar-link i {
+        margin-right: 0.75rem;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .search-bar {
+        position: relative;
+    }
+    
+    .search-bar .form-control {
+        padding-left: 2.5rem;
+        border-radius: 30px;
+    }
+    
+    .search-bar .search-icon {
+        position: absolute;
+        top: 50%;
+        left: 1rem;
+        transform: translateY(-50%);
+        color: var(--gray-color);
+    }
+    
+    .table-responsive {
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .progress {
+        height: 8px;
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête -->
+<section class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="mb-2">Gestion des Étudiants</h1>
+                <p class="lead mb-0">Gérez tous les étudiants de votre plateforme</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'admin:index' %}" class="btn btn-light me-2">
+                    <i class="fas fa-cog me-1"></i> Admin Django
+                </a>
+                <a href="#" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#addStudentModal">
+                    <i class="fas fa-user-plus me-1"></i> Ajouter
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Sidebar de navigation -->
+        <div class="col-lg-3 mb-4">
+            <div class="sidebar-nav">
+                <a href="{% url 'dashboard:admin' %}" class="sidebar-link">
+                    <i class="fas fa-home"></i> Tableau de bord
+                </a>
+                <a href="{% url 'dashboard:users' %}" class="sidebar-link">
+                    <i class="fas fa-users"></i> Utilisateurs
+                </a>
+                <a href="{% url 'dashboard:courses_management' %}" class="sidebar-link">
+                    <i class="fas fa-chalkboard"></i> Cours
+                </a>
+                <a href="{% url 'dashboard:instructors' %}" class="sidebar-link">
+                    <i class="fas fa-chalkboard-teacher"></i> Instructeurs
+                </a>
+                <a href="{% url 'dashboard:students' %}" class="sidebar-link active">
+                    <i class="fas fa-user-graduate"></i> Étudiants
+                </a>
+                <a href="{% url 'dashboard:transactions' %}" class="sidebar-link">
+                    <i class="fas fa-money-bill-wave"></i> Transactions
+                </a>
+                <a href="{% url 'dashboard:reports_management' %}" class="sidebar-link">
+                    <i class="fas fa-chart-line"></i> Rapports
+                </a>
+                <a href="{% url 'dashboard:settings' %}" class="sidebar-link">
+                    <i class="fas fa-cog"></i> Paramètres
+                </a>
+                <a href="{% url 'dashboard:reports' %}" class="sidebar-link">
+                    <i class="fas fa-file-alt"></i> Rapports du site
+                </a>
+                <a href="{% url 'dashboard:notifications' %}" class="sidebar-link">
+                    <i class="fas fa-bell"></i> Notifications
+                </a>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-lg-9">
+            <!-- Statistiques -->
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-primary-subtle text-primary me-3">
+                                <i class="fas fa-user-graduate"></i>
+                            </div>
+                            <h4 class="h5 mb-0">Total</h4>
+                        </div>
+                        <h2 class="mb-0">{{ total_students }}</h2>
+                        <p class="text-muted mb-0">Étudiants</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-success-subtle text-success me-3">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <h4 class="h5 mb-0">Actifs</h4>
+                        </div>
+                        <h2 class="mb-0">{{ active_students }}</h2>
+                        <p class="text-muted mb-0">Étudiants actifs</p>
+                    </div>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <div class="stat-card">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="stat-icon bg-info-subtle text-info me-3">
+                                <i class="fas fa-graduation-cap"></i>
+                            </div>
+                            <h4 class="h5 mb-0">Inscrits</h4>
+                        </div>
+                        <h2 class="mb-0">{{ active_students }}</h2>
+                        <p class="text-muted mb-0">Cours suivis</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recherche et filtres -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="search-bar">
+                                <i class="fas fa-search search-icon"></i>
+                                <input type="text" class="form-control" id="searchStudents" placeholder="Rechercher des étudiants...">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filterStudentStatus">
+                                <option value="">Tous les statuts</option>
+                                <option value="active">Actifs</option>
+                                <option value="inactive">Inactifs</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filterStudentCourses">
+                                <option value="">Tous les cours</option>
+                                <option value="0">Aucun cours</option>
+                                <option value="1-3">1-3 cours</option>
+                                <option value="4+">4+ cours</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Liste des étudiants -->
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Liste des étudiants</h5>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-file-export me-1"></i> Exporter
+                        </button>
+                        <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown">
+                            <span class="visually-hidden">Toggle Dropdown</span>
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">CSV</a></li>
+                            <li><a class="dropdown-item" href="#">Excel</a></li>
+                            <li><a class="dropdown-item" href="#">PDF</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">Étudiant</th>
+                                <th scope="col">Email</th>
+                                <th scope="col">Inscription</th>
+                                <th scope="col">Cours suivis</th>
+                                <th scope="col">Statut</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for student in students %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if student.profile.profile_picture %}
+                                            <img src="{{ student.profile.profile_picture.url }}" alt="{{ student.username }}" class="user-avatar me-3">
+                                        {% else %}
+                                            <img src="{% static 'img/default-user.png' %}" alt="{{ student.username }}" class="user-avatar me-3">
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="mb-0">{{ student.get_full_name|default:student.username }}</h6>
+                                            <small class="text-muted">@{{ student.username }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ student.email }}</td>
+                                <td>{{ student.date_joined|date:"d/m/Y" }}</td>
+                                <td>
+                                    <span class="badge bg-info">{{ student.course_count|default:"0" }}</span>
+                                </td>
+                                <td>
+                                    {% if student.is_active %}
+                                        <span class="badge bg-success">Actif</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Inactif</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="{% url 'dashboard:student_detail' student.id %}" class="btn btn-sm btn-outline-secondary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{% url 'dashboard:student_edit' student.id %}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteStudentModal" data-student-id="{{ student.id }}" data-student-name="{{ student.get_full_name|default:student.username }}">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-white">
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination justify-content-center mb-0">
+                            <li class="page-item disabled">
+                                <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Précédent</a>
+                            </li>
+                            <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#">3</a></li>
+                            <li class="page-item">
+                                <a class="page-link" href="#">Suivant</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+            
+            <!-- Étudiants les plus actifs -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0">Étudiants les plus actifs</h5>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for student in active_students_list %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div class="d-flex align-items-center">
+                                {% if student.profile.profile_picture %}
+                                    <img src="{{ student.profile.profile_picture.url }}" alt="{{ student.username }}" class="user-avatar me-3">
+                                {% else %}
+                                    <img src="{% static 'img/default-user.png' %}" alt="{{ student.username }}" class="user-avatar me-3">
+                                {% endif %}
+                                <div>
+                                    <h6 class="mb-0">{{ student.get_full_name|default:student.username }}</h6>
+                                    <small class="text-muted">{{ student.email }}</small>
+                                </div>
+                            </div>
+                            <div>
+                                <span class="badge bg-info me-2">{{ student.course_count }} cours</span>
+                                <small class="text-muted">Inscrit le {{ student.date_joined|date:"d/m/Y" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item text-center py-3">
+                        <p class="text-muted mb-0">Aucun étudiant actif à afficher</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal pour ajouter un étudiant -->
+<div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addStudentModalLabel">Ajouter un nouvel étudiant</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="username" class="form-label">Nom d'utilisateur</label>
+                            <input type="text" class="form-control" id="username" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="firstName" class="form-label">Prénom</label>
+                            <input type="text" class="form-control" id="firstName">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="lastName" class="form-label">Nom</label>
+                            <input type="text" class="form-control" id="lastName">
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">Mot de passe</label>
+                            <input type="password" class="form-control" id="password" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirmPassword" class="form-label">Confirmer le mot de passe</label>
+                            <input type="password" class="form-control" id="confirmPassword" required>
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="activeStudent" checked>
+                        <label class="form-check-label" for="activeStudent">
+                            Étudiant actif
+                        </label>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary">Créer l'étudiant</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation de suppression -->
+<div class="modal fade" id="deleteStudentModal" tabindex="-1" aria-labelledby="deleteStudentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteStudentModalLabel">Confirmer la suppression</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir supprimer l'étudiant <span id="studentNameToDelete"></span> ?</p>
+                <p class="text-danger">Cette action est irréversible et supprimera toutes les données associées à cet étudiant.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <form id="deleteStudentForm" method="POST" action="">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Fonctionnalité de recherche
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchStudents');
+        const studentRows = document.querySelectorAll('tbody tr');
+        
+        // Gestion du modal de suppression
+        const deleteModal = document.getElementById('deleteStudentModal');
+        if (deleteModal) {
+            deleteModal.addEventListener('show.bs.modal', function(event) {
+                const button = event.relatedTarget;
+                const studentId = button.getAttribute('data-student-id');
+                const studentName = button.getAttribute('data-student-name');
+                
+                // Mettre à jour le formulaire et le texte
+                document.getElementById('studentNameToDelete').textContent = studentName;
+                document.getElementById('deleteStudentForm').action = `/dashboard/students/delete/${studentId}/`;
+            });
+        }
+        
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            studentRows.forEach(row => {
+                const name = row.querySelector('h6').textContent.toLowerCase();
+                const email = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                
+                if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // Filtrage par statut
+        const filterStudentStatus = document.getElementById('filterStudentStatus');
+        filterStudentStatus.addEventListener('change', function() {
+            const selectedStatus = this.value;
+            
+            if (!selectedStatus) {
+                studentRows.forEach(row => row.style.display = '');
+                return;
+            }
+            
+            studentRows.forEach(row => {
+                const statusBadge = row.querySelector('td:nth-child(5) .badge');
+                const status = statusBadge.textContent.toLowerCase();
+                
+                if ((selectedStatus === 'active' && status === 'actif') || 
+                    (selectedStatus === 'inactive' && status === 'inactif')) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+        
+        // Filtrage par nombre de cours
+        const filterStudentCourses = document.getElementById('filterStudentCourses');
+        filterStudentCourses.addEventListener('change', function() {
+            const selectedRange = this.value;
+            
+            if (!selectedRange) {
+                studentRows.forEach(row => row.style.display = '');
+                return;
+            }
+            
+            studentRows.forEach(row => {
+                const coursesCount = parseInt(row.querySelector('td:nth-child(4) .badge').textContent);
+                
+                if (selectedRange === '0' && coursesCount === 0) {
+                    row.style.display = '';
+                } else if (selectedRange === '1-3' && coursesCount >= 1 && coursesCount <= 3) {
+                    row.style.display = '';
+                } else if (selectedRange === '4+' && coursesCount >= 4) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+{% endblock %} 

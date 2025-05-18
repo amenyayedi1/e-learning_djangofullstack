@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load dashboard_filters %}
+
+{% block title %}Supprimer le contenu {{ content.title }} | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        padding: 20px 0;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    .sidebar {
+        position: sticky;
+        top: 20px;
+        height: calc(100vh - 40px);
+        padding-right: 15px;
+        overflow-y: auto;
+    }
+    .sidebar .list-group-item {
+        border-radius: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+    .warning-icon {
+        font-size: 3rem;
+        color: #dc3545;
+        margin-bottom: 1rem;
+    }
+    .delete-warning {
+        border-left: 5px solid #dc3545;
+        padding: 1rem;
+        background-color: #f8d7da;
+        margin-bottom: 2rem;
+    }
+    .content-info {
+        background-color: #f8f9fa;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    .content-preview {
+        border: 1px solid #dee2e6;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        background-color: #fff;
+    }
+    .video-container {
+        position: relative;
+        padding-bottom: 56.25%; /* 16:9 */
+        height: 0;
+        overflow: hidden;
+        max-width: 100%;
+        margin-bottom: 1rem;
+    }
+    .video-container iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+    }
+    .file-icon {
+        font-size: 2rem;
+        margin-right: 0.5rem;
+        color: #007bff;
+    }
+    .content-text {
+        max-height: 150px;
+        overflow-y: auto;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-radius: 0.25rem;
+        white-space: pre-line;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>Supprimer le contenu "{{ content.title }}"</h2>
+            <div>
+                <a href="{% url 'dashboard:module_detail' content.module.id %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Retour au module
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row">
+        <!-- Barre latérale -->
+        <div class="col-md-3">
+            <div class="sidebar">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Navigation</h5>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Module:</strong> {{ content.module.title }}</p>
+                        <p><strong>Cours:</strong> {{ content.module.course.title }}</p>
+                        <p><strong>Type:</strong> 
+                            <span class="badge bg-info">
+                                <i class="bi {{ content.content_type|get_content_type_icon }}"></i>
+                                {{ content.get_content_type_display }}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="list-group">
+                    <a href="{% url 'dashboard:module_detail' content.module.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-list-ul"></i> Liste des contenus
+                    </a>
+                    <a href="{% url 'dashboard:modules_management' content.module.course.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-grid-3x3-gap"></i> Tous les modules
+                    </a>
+                    <a href="{% url 'dashboard:course_detail' content.module.course.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-book"></i> Détails du cours
+                    </a>
+                    <a href="{% url 'dashboard:content_detail' content.id %}" class="list-group-item list-group-item-action">
+                        <i class="bi bi-eye"></i> Voir le contenu
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-md-9">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        Confirmation de suppression
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="warning-icon">
+                            <i class="bi bi-exclamation-triangle-fill"></i>
+                        </div>
+                        <h3>Attention: Cette action est irréversible!</h3>
+                    </div>
+                    
+                    <div class="delete-warning">
+                        <p class="mb-2"><strong>Vous êtes sur le point de supprimer définitivement ce contenu.</strong></p>
+                        <p>Cette action entraînera également la suppression de:</p>
+                        <ul>
+                            {% if content.content_type == 'file' and content.file %}
+                            <li>Le fichier associé: {{ content.file.name|filename }}</li>
+                            {% elif content.content_type == 'image' and content.image %}
+                            <li>L'image associée: {{ content.image.name|filename }}</li>
+                            {% endif %}
+                            <li>Les progrès des étudiants liés à ce contenu</li>
+                        </ul>
+                        <p class="mb-0">Cette action ne peut pas être annulée. Assurez-vous que c'est bien ce que vous souhaitez faire.</p>
+                    </div>
+                    
+                    <div class="content-info">
+                        <h5>Informations sur le contenu</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Titre:</strong> {{ content.title }}</p>
+                                <p><strong>Module:</strong> {{ content.module.title }}</p>
+                                <p><strong>Type:</strong> {{ content.get_content_type_display }}</p>
+                                <p><strong>Position:</strong> {{ content.order }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Créé le:</strong> {{ content.created_at|date:"d/m/Y H:i" }}</p>
+                                <p><strong>Mis à jour le:</strong> {{ content.updated_at|date:"d/m/Y H:i" }}</p>
+                                <p><strong>ID:</strong> {{ content.id }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="content-preview">
+                        <h5>Aperçu du contenu</h5>
+                        
+                        {% if content.content_type == 'text' %}
+                        <div class="content-text">
+                            {{ content.text|linebreaks }}
+                        </div>
+                        
+                        {% elif content.content_type == 'video' %}
+                        <div class="video-container">
+                            <iframe src="{{ content.video_url|youtube_embed_url }}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                        </div>
+                        <p class="text-muted">URL: {{ content.video_url }}</p>
+                        
+                        {% elif content.content_type == 'file' and content.file %}
+                        <div class="d-flex align-items-center">
+                            <div class="file-icon">
+                                <i class="bi bi-file-earmark"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0"><strong>{{ content.file.name|filename }}</strong></p>
+                                <p class="text-muted mb-0">Taille: {{ content.file.size|filesizeformat }}</p>
+                            </div>
+                        </div>
+                        
+                        {% elif content.content_type == 'image' and content.image %}
+                        <div class="text-center">
+                            <img src="{{ content.image.url }}" alt="{{ content.title }}" style="max-width: 100%; max-height: 200px;">
+                        </div>
+                        
+                        {% else %}
+                        <p class="text-muted">Aucun aperçu disponible pour ce type de contenu.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <form method="post" action="{% url 'dashboard:content_delete' content.id %}">
+                        {% csrf_token %}
+                        
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="confirm_delete" name="confirm_delete" required>
+                            <label class="form-check-label" for="confirm_delete">
+                                Je confirme vouloir supprimer définitivement ce contenu.
+                            </label>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'dashboard:module_detail' content.module.id %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x"></i> Annuler
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Supprimer définitivement
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

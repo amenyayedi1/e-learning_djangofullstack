@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Catalogue de cours | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-section {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+    .search-bar {
+        margin-bottom: 20px;
+    }
+    .course-count {
+        color: var(--gray-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="mb-3">Catalogue de cours</h1>
+            <p class="lead">Découvrez notre sélection de cours de haute qualité pour développer vos compétences</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <p class="course-count">{{ courses.count }} cours disponibles</p>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Filtres -->
+        <div class="col-lg-3 mb-4">
+            <div class="filter-section">
+                <h5 class="mb-3">Filtres</h5>
+                <form method="get" action="{% url 'courses:course_list' %}">
+                    <div class="mb-3">
+                        <label for="search" class="form-label">Recherche</label>
+                        <div class="input-group">
+                            <input type="text" name="search" class="form-control" id="search" placeholder="Rechercher un cours..." value="{{ request.GET.search|default:'' }}">
+                            <button class="btn btn-primary" type="submit">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Catégories</label>
+                        {% for category in categories %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="category" 
+                                   value="{{ category.id }}" id="category{{ category.id }}"
+                                   {% if category.id|stringformat:"i" in selected_categories %}checked{% endif %}
+>
+                            <label class="form-check-label" for="category{{ category.id }}">
+                                {{ category.name }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Niveau</label>
+                        {% for level_id, level_name in difficulty_levels %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="level" 
+                                   value="{{ level_id }}" id="level{{ level_id }}"
+                                   {% if levels %}checked{% endif %}>
+                            <label class="form-check-label" for="level{{ level_id }}">
+                                {{ level_name }}
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Prix</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="free" value="1" id="free" {% if request.GET.free == "1" %}checked{% endif %}>
+                            <label class="form-check-label" for="free">Cours gratuits</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="paid" value="1" id="paid" {% if request.GET.paid == "1" %}checked{% endif %}>
+                            <label class="form-check-label" for="paid">Cours payants</label>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 mb-2">Appliquer les filtres</button>
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-outline-secondary w-100">Réinitialiser</a>
+                </form>
+            </div>
+        </div>
+        <!-- Liste des cours -->
+        <div class="col-lg-9">
+            {% if courses %}
+                <div class="mb-4">
+                    <label for="sort" class="form-label me-2">Trier par:</label>
+                    <select id="sort" class="form-select form-select-sm d-inline-block w-auto" onchange="location = this.value;">
+                        <option value="{% url 'courses:course_list' %}?{{ request.GET.urlencode }}&sort=latest" {% if sort == 'latest' %}selected{% endif %}>Les plus récents</option>
+                        <option value="{% url 'courses:course_list' %}?{{ request.GET.urlencode }}&sort=price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Prix (croissant)</option>
+                        <option value="{% url 'courses:course_list' %}?{{ request.GET.urlencode }}&sort=price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Prix (décroissant)</option>
+                        <option value="{% url 'courses:course_list' %}?{{ request.GET.urlencode }}&sort=rating" {% if sort == 'rating' %}selected{% endif %}>Mieux notés</option>
+                        <option value="{% url 'courses:course_list' %}?{{ request.GET.urlencode }}&sort=popular" {% if sort == 'popular' %}selected{% endif %}>Les plus populaires</option>
+                    </select>
+                </div>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    {% for course in courses %}
+                        <div class="col">
+                            {% include "components/courses_card.html" with course=course %}
+                        </div>
+                    {% endfor %}
+                </div>
+                
+            {% else %}
+                <div class="alert alert-info text-center p-5">
+                    <i class="fas fa-search fa-3x mb-3"></i>
+                    <h4>Aucun cours trouvé</h4>
+                    <p>Nous n'avons pas trouvé de cours correspondant à vos critères de recherche.</p>
+                    <a href="{% url 'courses:course_list' %}" class="btn btn-primary mt-2">Voir tous les cours</a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

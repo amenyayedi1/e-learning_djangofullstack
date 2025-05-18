@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Mes Cours Inscrits | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .header-section {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .course-card {
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        overflow: hidden;
+        transition: transform 0.3s ease;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    .course-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+    }
+    .course-card img {
+        height: 180px;
+        object-fit: cover;
+        width: 100%;
+    }
+    .course-info {
+        padding: 1rem;
+        flex-grow: 1;
+    }
+    .course-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+    .course-description {
+        font-size: 0.9rem;
+        color: #555;
+        margin-bottom: 1rem;
+        min-height: 3rem;
+    }
+    .course-footer {
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .btn-view {
+        font-size: 0.9rem;
+        padding: 0.4rem 0.8rem;
+    }
+    .empty-message {
+        text-align: center;
+        color: #666;
+        padding: 3rem 0;
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="header-section">
+    <div class="container">
+        <h1>Mes cours inscrits</h1>
+        <p>Voici la liste des cours auxquels vous êtes actuellement inscrit(e).</p>
+    </div>
+</section>
+
+<div class="container mb-5">
+    {% if courses %}
+    <div class="row g-4">
+        {% for course in courses %}
+        <div class="col-md-6 col-lg-4">
+            <div class="course-card">
+                {% if course.image %}
+                    <img src="{{ course.image.url }}" alt="{{ course.title }}">
+                {% else %}
+                    <img src="{% static 'img/default-course.png' %}" alt="{{ course.title }}">
+                {% endif %}
+                <div class="course-info">
+                    <h2 class="course-title">{{ course.title }}</h2>
+                    <p class="course-description">{{ course.short_description|default:"Pas de description disponible."|truncatechars:100 }}</p>
+                </div>
+                <div class="course-footer">
+                    <small>Instructeur: {{ course.instructor.get_full_name|default:course.instructor.username }}</small>
+                    <a href="{% url 'course_detail' course.id %}" class="btn btn-primary btn-sm btn-view">Voir le cours</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    <nav aria-label="Pagination des cours" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Précédent">
+                    &laquo; Précédent
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">&laquo; Précédent</span>
+            </li>
+            {% endif %}
+
+            {% for num in paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Suivant">
+                    Suivant &raquo;
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link">Suivant &raquo;</span>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% else %}
+    <div class="empty-message">
+        <p>Vous n'êtes inscrit à aucun cours pour le moment.</p>
+        <a href="{% url 'courses:course_list' %}" class="btn btn-primary mt-3">Voir tous les cours</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

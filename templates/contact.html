@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Contact | EduPlus{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h1 class="text-center mb-5">Contactez-nous</h1>
+                    
+                    <div class="mb-4">
+                        <p class="lead text-center">
+                            Vous avez des questions ou besoin d'aide ? Notre équipe est là pour vous !
+                        </p>
+                    </div>
+                    
+                    <form method="post" action="#" class="mb-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Nom complet</label>
+                            <input type="text" class="form-control" id="name" name="name" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="subject" class="form-label">Sujet</label>
+                            <select class="form-select" id="subject" name="subject">
+                                <option value="support">Support technique</option>
+                                <option value="billing">Question sur la facturation</option>
+                                <option value="courses">Question sur les cours</option>
+                                <option value="other">Autre</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Message</label>
+                            <textarea class="form-control" id="message" name="message" rows="5" required></textarea>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Envoyer le message</button>
+                        </div>
+                    </form>
+                    
+                    <div class="text-center">
+                        <p><strong>Note :</strong> Formulaire de démo uniquement, les messages ne sont pas envoyés pour le moment.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mt-4 shadow">
+                <div class="card-body p-5">
+                    <h4 class="mb-4">Autres façons de nous contacter</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            <div class="mb-2">
+                                <i class="fas fa-envelope fa-2x text-primary"></i>
+                            </div>
+                            <h5>Email</h5>
+                            <p>support@eduplus.fr</p>
+                        </div>
+                        
+                        <div class="col-md-4 text-center mb-3 mb-md-0">
+                            <div class="mb-2">
+                                <i class="fas fa-phone fa-2x text-primary"></i>
+                            </div>
+                            <h5>Téléphone</h5>
+                            <p>+33 1 23 45 67 89</p>
+                        </div>
+                        
+                        <div class="col-md-4 text-center">
+                            <div class="mb-2">
+                                <i class="fas fa-map-marker-alt fa-2x text-primary"></i>
+                            </div>
+                            <h5>Adresse</h5>
+                            <p>123 Avenue de l'Éducation<br>75001 Paris, France</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

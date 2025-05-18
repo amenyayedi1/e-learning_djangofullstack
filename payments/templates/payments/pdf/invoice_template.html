@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Facture {{ invoice.invoice_number }}</title>
+    <style>
+        @page {
+            size: a4 portrait;
+            margin: 2cm;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 12pt;
+            line-height: 1.4;
+            color: #333;
+        }
+        .header {
+            margin-bottom: 20px;
+        }
+        .company-info {
+            text-align: left;
+            float: left;
+            width: 50%;
+        }
+        .invoice-info {
+            text-align: right;
+            float: right;
+            width: 50%;
+        }
+        .invoice-title {
+            font-size: 24pt;
+            color: #4F46E5;
+            font-weight: bold;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            text-align: center;
+            clear: both;
+        }
+        .client-info {
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+        }
+        th {
+            background-color: #f2f2f2;
+            padding: 10px;
+            text-align: left;
+            font-weight: bold;
+            border-bottom: 1px solid #ddd;
+        }
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .total-section {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .total-row {
+            margin-bottom: 5px;
+        }
+        .total-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 150px;
+        }
+        .total-value {
+            display: inline-block;
+            width: 100px;
+        }
+        .grand-total {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #4F46E5;
+            margin-top: 10px;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 10pt;
+            color: #666;
+        }
+        .payment-info {
+            margin-top: 30px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+        }
+        .clearfix {
+            clear: both;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-info">
+            <h1 style="color: #4F46E5; margin: 0;">{{ company_name }}</h1>
+            <div>{{ company_address }}</div>
+            <div>Email: {{ company_email }}</div>
+            <div>Tél: {{ company_phone }}</div>
+        </div>
+        <div class="invoice-info">
+            <h2 style="margin: 0; color: #4F46E5;">FACTURE</h2>
+            <div>N° {{ invoice.invoice_number }}</div>
+            <div>Date: {{ date }}</div>
+            <div>Réf. Paiement: {{ payment.reference_id }}</div>
+        </div>
+    </div>
+    
+    <div class="clearfix"></div>
+    
+    <div class="client-info">
+        <h3>Facturation à:</h3>
+        <div>{{ invoice.billing_name }}</div>
+        {% if invoice.billing_address %}
+        <div>{{ invoice.billing_address }}</div>
+        {% endif %}
+        {% if invoice.billing_city or invoice.billing_postcode %}
+        <div>{{ invoice.billing_postcode }} {{ invoice.billing_city }}</div>
+        {% endif %}
+        {% if invoice.billing_country %}
+        <div>{{ invoice.billing_country }}</div>
+        {% endif %}
+        <div>Email: {{ user.email }}</div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th>Quantité</th>
+                <th>Prix unitaire</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{ course.title }}</td>
+                <td>1</td>
+                <td>{{ invoice.subtotal }} €</td>
+                <td>{{ invoice.subtotal }} €</td>
+            </tr>
+        </tbody>
+    </table>
+    
+    <div class="total-section">
+        <div class="total-row">
+            <span class="total-label">Sous-total:</span>
+            <span class="total-value">{{ invoice.subtotal }} €</span>
+        </div>
+        
+        {% if invoice.discount_amount > 0 %}
+        <div class="total-row">
+            <span class="total-label">Remise ({{ invoice.discount_percent }}%):</span>
+            <span class="total-value">-{{ invoice.discount_amount }} €</span>
+        </div>
+        {% endif %}
+        
+        {% if invoice.tax_amount > 0 %}
+        <div class="total-row">
+            <span class="total-label">TVA ({{ invoice.tax_percent }}%):</span>
+            <span class="total-value">{{ invoice.tax_amount }} €</span>
+        </div>
+        {% endif %}
+        
+        <div class="grand-total">
+            <span class="total-label">Total:</span>
+            <span class="total-value">{{ invoice.total }} €</span>
+        </div>
+    </div>
+    
+    <div class="payment-info">
+        <h3>Informations de paiement</h3>
+        <div>Date de paiement: {{ payment.paid_at|date:"d/m/Y H:i" }}</div>
+        <div>Méthode de paiement: {{ payment.get_payment_method_display }}</div>
+        <div>Statut: {{ payment.get_status_display }}</div>
+    </div>
+    
+    <div class="footer">
+        <p>Merci pour votre confiance ! Pour toute question concernant cette facture, veuillez nous contacter à {{ company_email }}.</p>
+        <p>{{ company_name }} - {{ site_url }}</p>
+    </div>
+</body>
+</html> 

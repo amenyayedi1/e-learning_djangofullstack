@@ -1,0 +1,563 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tableau de bord administrateur | EduPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        background-color: var(--primary-color);
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        color: white;
+    }
+    
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        transition: transform 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-icon {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        display: inline-block;
+        width: 60px;
+        height: 60px;
+        line-height: 60px;
+        text-align: center;
+        border-radius: 50%;
+    }
+    
+    .sidebar-nav {
+        position: sticky;
+        top: 90px;
+    }
+    
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        color: var(--dark-color);
+        text-decoration: none;
+        border-radius: 5px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar-link:hover, .sidebar-link.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .sidebar-link i {
+        margin-right: 0.75rem;
+        width: 20px;
+        text-align: center;
+    }
+    
+    .notification-badge {
+        margin-left: auto;
+        background-color: var(--danger-color);
+    }
+    
+    .sidebar-link:hover .notification-badge {
+        background-color: white;
+        color: var(--primary-color);
+    }
+    
+    .chart-container {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+    
+    .activity-item {
+        padding: 1rem;
+        border-left: 3px solid var(--primary-color);
+        background-color: white;
+        margin-bottom: 1rem;
+        border-radius: 0 8px 8px 0;
+    }
+    
+    .list-group-activity .list-group-item {
+        border-left: 3px solid transparent;
+        transition: all 0.2s ease;
+    }
+    
+    .list-group-activity .list-group-item:hover {
+        border-left-color: var(--primary-color);
+        background-color: rgba(var(--primary-rgb), 0.05);
+    }
+    
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        line-height: 40px;
+        text-align: center;
+        border-radius: 50%;
+        margin-right: 1rem;
+    }
+    
+    .progress {
+        height: 8px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .progress-sm {
+        height: 5px;
+    }
+    
+    .stats-table th {
+        font-weight: 500;
+        color: var(--gray-color);
+    }
+    
+    .recent-applications-table td {
+        vertical-align: middle;
+    }
+    
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- En-tête du tableau de bord -->
+<section class="dashboard-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8">
+                <h1 class="mb-2">Tableau de bord administrateur</h1>
+                <p class="lead mb-0">Gérez votre plateforme d'apprentissage en ligne</p>
+            </div>
+            <div class="col-lg-4 text-lg-end">
+                <a href="{% url 'admin:index' %}" class="btn btn-light">
+                    <i class="fas fa-cog me-1"></i> Administration Django
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="container mb-5">
+    <div class="row">
+        <!-- Sidebar de navigation -->
+        <div class="col-lg-3 mb-4">
+            <div class="sidebar-nav">
+                <a href="{% url 'dashboard:admin' %}" class="sidebar-link active">
+                    <i class="fas fa-home"></i> Tableau de bord
+                </a>
+                <a href="{% url 'dashboard:users' %}" class="sidebar-link">
+                    <i class="fas fa-users"></i> Utilisateurs
+                </a>
+                <a href="{% url 'dashboard:courses_management' %}" class="sidebar-link">
+                    <i class="fas fa-chalkboard"></i> Cours
+                    {% if pending_courses > 0 %}
+                    <span class="badge rounded-pill notification-badge">{{ pending_courses }}</span>
+                    {% endif %}
+                </a>
+                <a href="{% url 'dashboard:instructors' %}" class="sidebar-link">
+                    <i class="fas fa-chalkboard-teacher"></i> Instructeurs
+                </a>
+                <a href="{% url 'dashboard:students' %}" class="sidebar-link">
+                    <i class="fas fa-user-graduate"></i> Étudiants
+                </a>
+                <a href="{% url 'dashboard:transactions' %}" class="sidebar-link">
+                    <i class="fas fa-money-bill-wave"></i> Transactions
+                </a>
+                <a href="{% url 'dashboard:reports_management' %}" class="sidebar-link">
+                    <i class="fas fa-chart-line"></i> Rapports
+                </a>
+                <a href="{% url 'dashboard:settings' %}" class="sidebar-link">
+                    <i class="fas fa-cog"></i> Paramètres
+                </a>
+                <a href="{% url 'dashboard:reports' %}" class="sidebar-link">
+                    <i class="fas fa-file-alt"></i> Rapports du site
+                </a>
+                <a href="{% url 'dashboard:notifications' %}" class="sidebar-link">
+                    <i class="fas fa-bell"></i> Notifications
+                    {% if notifications_count > 0 %}
+                    <span class="badge rounded-pill notification-badge">{{ notifications_count }}</span>
+                    {% endif %}
+                </a>
+            </div>
+        </div>
+        
+        <!-- Contenu principal -->
+        <div class="col-lg-9">
+            <!-- Statistiques -->
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary-light text-primary">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h5>{{ total_users }}</h5>
+                    <p class="text-muted mb-0">Utilisateurs</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bg-success-light text-success">
+                        <i class="fas fa-chalkboard"></i>
+                    </div>
+                    <h5>{{ total_courses }}</h5>
+                    <p class="text-muted mb-0">Cours</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bg-info-light text-info">
+                        <i class="fas fa-user-graduate"></i>
+                    </div>
+                    <h5>{{ total_students }}</h5>
+                    <p class="text-muted mb-0">Étudiants inscrits</p>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning-light text-warning">
+                        <i class="fas fa-euro-sign"></i>
+                    </div>
+                    <h5>{{ total_revenue|default:"0" }} €</h5>
+                    <p class="text-muted mb-0">Revenus totaux</p>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Graphique des inscriptions -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Inscriptions mensuelles</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="registrationsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Graphique des revenus -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Revenus mensuels</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Activités récentes -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Activités récentes</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush list-group-activity">
+                                {% if recent_activities %}
+                                    {% for activity in recent_activities %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex align-items-center">
+                                                <div class="activity-icon bg-{{ activity.color }}-light text-{{ activity.color }}">
+                                                    <i class="fas fa-{{ activity.icon }}"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="mb-1">{{ activity.description }}</p>
+                                                    <small class="text-muted">{{ activity.timestamp|date:"d/m/Y H:i" }}</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="text-center py-5">
+                                        <i class="fas fa-exclamation-circle fa-3x text-muted mb-3"></i>
+                                        <p>Aucune activité récente à afficher</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cours les plus populaires -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Cours les plus populaires</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if popular_courses %}
+                                <table class="table stats-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Cours</th>
+                                            <th>Instructeur</th>
+                                            <th>Inscriptions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for course in popular_courses %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="flex-shrink-0">
+                                                            {% if course.image %}
+                                                                <img src="{{ course.image.url }}" width="40" height="40" class="rounded" alt="{{ course.title }}">
+                                                            {% else %}
+                                                                <img src="{% static 'img/course-placeholder.jpg' %}" width="40" height="40" class="rounded" alt="{{ course.title }}">
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="ms-2">
+                                                            <a href="{% url 'courses:course_detail' course.slug %}" class="text-decoration-none">{{ course.title }}</a>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ course.instructor.get_full_name }}</td>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="flex-grow-1 me-2">
+                                                            <div class="progress progress-sm">
+                                                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ course.enrollment_percentage }}%" aria-valuenow="{{ course.enrollment_percentage }}" aria-valuemin="0" aria-valuemax="100"></div>
+                                                            </div>
+                                                        </div>
+                                                        <span>{{ course.enrollment_count }}</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-exclamation-circle fa-3x text-muted mb-3"></i>
+                                    <p>Aucun cours à afficher</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <!-- Demandes récentes d'instructeurs -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="card-title mb-0">Demandes d'instructeurs</h5>
+                            <a href="#" class="btn btn-sm btn-outline-primary">Voir toutes</a>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if instructor_applications %}
+                                <table class="table recent-applications-table">
+                                    <tbody>
+                                        {% for application in instructor_applications %}
+                                            <tr>
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <img src="{% if application.user.profile_picture %}{{ application.user.profile_picture.url }}{% else %}{% static 'img/default-user.png' %}{% endif %}" 
+                                                             class="user-avatar me-2" alt="{{ application.user.get_full_name }}">
+                                                        <div>
+                                                            <h6 class="mb-0">{{ application.user.get_full_name }}</h6>
+                                                            <small class="text-muted">{{ application.user.email }}</small>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td>{{ application.created_at|date:"d/m/Y" }}</td>
+                                                <td>
+                                                    <div class="d-flex">
+                                                        <button class="btn btn-sm btn-success me-2">Approuver</button>
+                                                        <button class="btn btn-sm btn-outline-danger">Rejeter</button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-user-check fa-3x text-muted mb-3"></i>
+                                    <p>Aucune demande d'instructeur en attente</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Nouveaux utilisateurs -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-white">
+                            <h5 class="card-title mb-0">Nouveaux utilisateurs</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            {% if new_users %}
+                                <div class="list-group list-group-flush list-group-activity">
+                                    {% for user in new_users %}
+                                        <div class="list-group-item">
+                                            <div class="d-flex align-items-center">
+                                                <img src="{% if user.profile_picture %}{{ user.profile_picture.url }}{% else %}{% static 'img/default-user.png' %}{% endif %}" 
+                                                     class="user-avatar me-2" alt="{{ user.get_full_name }}">
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-0">{{ user.get_full_name }}</h6>
+                                                    <small class="text-muted">{{ user.email }}</small>
+                                                </div>
+                                                <span class="badge {% if user.is_instructor %}bg-primary{% else %}bg-info{% endif %}">
+                                                    {% if user.is_instructor %}Instructeur{% else %}Étudiant{% endif %}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                                    <p>Aucun nouvel utilisateur récent</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Tâches rapides -->
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="card-title mb-0">Actions rapides</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <a href="#" class="card h-100 text-decoration-none text-center p-3">
+                                <div class="text-primary mb-2">
+                                    <i class="fas fa-user-plus fa-2x"></i>
+                                </div>
+                                <h6>Ajouter un utilisateur</h6>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <a href="#" class="card h-100 text-decoration-none text-center p-3">
+                                <div class="text-success mb-2">
+                                    <i class="fas fa-chalkboard fa-2x"></i>
+                                </div>
+                                <h6>Ajouter un cours</h6>
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-3 mb-md-0">
+                            <a href="#" class="card h-100 text-decoration-none text-center p-3">
+                                <div class="text-warning mb-2">
+                                    <i class="fas fa-tasks fa-2x"></i>
+                                </div>
+                                <h6>Gérer les catégories</h6>
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="#" class="card h-100 text-decoration-none text-center p-3">
+                                <div class="text-danger mb-2">
+                                    <i class="fas fa-file-export fa-2x"></i>
+                                </div>
+                                <h6>Exporter les rapports</h6>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Graphique des inscriptions
+        const registrationsCtx = document.getElementById('registrationsChart').getContext('2d');
+        
+        // Données factices pour le graphique
+        const registrationsData = {
+            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'],
+            datasets: [{
+                label: 'Nouvelles inscriptions',
+                data: [120, 150, 180, 220, 250, 280, 310, 340, 370, 400, 430, 460],
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 2,
+                tension: 0.4
+            }]
+        };
+        
+        const registrationsChart = new Chart(registrationsCtx, {
+            type: 'line',
+            data: registrationsData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Graphique des revenus
+        const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+        
+        // Données factices pour le graphique
+        const revenueData = {
+            labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'],
+            datasets: [{
+                label: 'Revenus mensuels (€)',
+                data: [5000, 7000, 10000, 12000, 15000, 18000, 20000, 22000, 24000, 26000, 28000, 30000],
+                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 2,
+                tension: 0.4
+            }]
+        };
+        
+        const revenueChart = new Chart(revenueCtx, {
+            type: 'line',
+            data: revenueData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + ' €';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+    
+</script>
+{% endblock %} 
