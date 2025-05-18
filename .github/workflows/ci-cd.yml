@@ -50,7 +50,7 @@ jobs:
         env:
           PA_USER:   ${{ secrets.PA_USER }}
           PA_TOKEN:  ${{ secrets.PA_TOKEN }}
-          PA_DOMAIN: ${{ secrets.PA_DOMAIN }}  # ex. amenyayedi.pythonanywhere.com
+          PA_DOMAIN: amenyayedi.pythonanywhere.com
         run: |
           echo "→ Reloading ${PA_DOMAIN}…"
           curl -v -X POST \
